@@ -26,8 +26,9 @@
   * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
 body { 
     background: linear-gradient(rgba(15, 76, 92, 0.85), rgba(15, 76, 92, 0.85)), url('doctor.jpg');
-    background-size: 300px; /* تصغير حجم الصورة لعرض 300 بكسل */
-    background-repeat: repeat; /* تكرارها بشكل متناسق كخلفية */
+    background-size: contain; /* إظهار الصورة بالكامل دون قص أطرافها */
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
     color: var(--text); 
     padding: 20px; 
