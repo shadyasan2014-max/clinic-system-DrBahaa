@@ -722,6 +722,39 @@
     }
   }
 
+  // دالة خاصة برفع ملف الإقرار (Consent) من جدول تأكيد العمليات
+  async function handleConsentFile(input, dbId) {
+    if (input.files && input.files[0]) {
+      let file = input.files[0];
+      let reader = new FileReader();
+      reader.onload = async function(e) {
+        let consentFileObj = {
+          name: file.name,
+          type: file.type,
+          data: e.target.result
+        };
+
+        let item = allPreOpRecords.find(a => a.dbId === dbId);
+        if (item) {
+          let updatedPayload = { ...item };
+          delete updatedPayload.dbId;
+          updatedPayload.consentFile = consentFileObj;
+          updatedPayload.lastActionBy = currentUser ? currentUser.full_name : 'غير محدد';
+
+          const { error } = await supabaseClient.from('preop_records').update({ data: updatedPayload }).eq('id', dbId);
+          if (!error) {
+            alert(`✅ تم رفع وحفظ إقرار العملية (Consent) للمريض: ${item.patientName} بنجاح!`);
+            logActivity('رفع إقرار عملية (Consent)', `تم رفع ملف الإقرار للمريض: ${item.patientName}`);
+            fetchPreOpFromSupabase();
+          } else {
+            alert('⚠️ تعذر رفع الملف، يرجى المحاولة مرة أخرى.');
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   function renderLabPreviews(filesArray, containerId) {
     let container = document.getElementById(containerId);
     container.innerHTML = '';
@@ -803,7 +836,14 @@
 
     list.forEach((item, index) => {
       let status = item.opStatus || 'pending';
-      let showCodeStyle = (status === 'completed') ? 'display:block;' : 'display:none;';
+      let showDetailsStyle = (status === 'completed') ? 'display:block;' : 'display:none;';
+
+      // زر لعرض الإقرار المرفق إذا وجد
+      let consentViewHtml = '';
+      if (item.consentFile) {
+        let cFile = item.consentFile;
+        consentViewHtml = `<div style="margin-top:6px;"><button class="btn btn-info" style="padding:2px 8px; font-size:0.75rem;" onclick="viewConsentFile(${item.dbId})">📂 عرض الإقرار (${cFile.name})</button></div>`;
+      }
 
       tbody.innerHTML += `
         <tr>
@@ -822,8 +862,13 @@
             <input type="date" id="rowOpDate_${item.dbId}" value="${item.opDate || ''}" onchange="autoSaveRowStatus(${item.dbId})" style="padding:6px; font-weight:bold;">
           </td>
           <td>
-            <div id="codeContainer_${item.dbId}" style="${showCodeStyle}">
-              <input type="text" id="rowCode_${item.dbId}" value="${item.patientCode || ''}" onchange="autoSaveRowStatus(${item.dbId})" placeholder="اكتب الكود..." style="padding:6px; font-weight:bold; color:var(--primary); width:100%;">
+            <div id="detailsContainer_${item.dbId}" style="${showDetailsStyle}">
+              <input type="text" id="rowCode_${item.dbId}" value="${item.patientCode || ''}" onchange="autoSaveRowStatus(${item.dbId})" placeholder="كود العملاء..." style="padding:6px; font-weight:bold; color:var(--primary); width:100%; margin-bottom:4px;">
+              <div style="background:#f8fafc; border:1px dashed #cbd5e1; padding:6px; border-radius:6px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:#166534; display:block; margin-bottom:2px;">📎 إقرار العملية (Consent):</label>
+                <input type="file" id="consentInput_${item.dbId}" accept="image/*,.pdf,.doc,.docx" onchange="handleConsentFile(this, ${item.dbId})" style="font-size:0.75rem; width:100%;">
+                ${consentViewHtml}
+              </div>
             </div>
           </td>
           <td>
@@ -834,6 +879,40 @@
     });
   }
 
+  function viewConsentFile(dbId) {
+    let item = allPreOpRecords.find(a => a.dbId === dbId);
+    if (!item || !item.consentFile) return alert("لا يوجد إقرار مرفق لهذه الحالة");
+
+    let cFile = item.consentFile;
+    let isImg = cFile.type && cFile.type.startsWith('image/');
+
+    document.getElementById('viewerTitle').innerText = `📂 إقرار العملية (Consent): ${item.patientName}`;
+    let gallery = document.getElementById('viewerGallery');
+    gallery.innerHTML = '';
+
+    if (isImg) {
+      gallery.innerHTML = `
+        <div style="border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; background: #f8fafc;">
+          <p style="margin-bottom:6px; font-weight:bold; color:var(--primary);">🖼️ ${cFile.name}</p>
+          <img src="${cFile.data}" style="max-width:100%; max-height:450px; border-radius:6px;">
+          <br>
+          <a href="${cFile.data}" download="${cFile.name}" class="btn btn-secondary" style="display:inline-block; margin-top:8px; padding:4px 12px; font-size:0.8rem; text-decoration:none;">⬇️ تحميل ملف الإقرار</a>
+        </div>
+      `;
+    } else {
+      let icon = cFile.name.endsWith('.pdf') ? '📄' : '📝';
+      gallery.innerHTML = `
+        <div style="border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; background: #f8fafc; text-align: right;">
+          <h4 style="color:var(--primary); margin-bottom:6px;">${icon} ${cFile.name}</h4>
+          <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">ملف إقرار العملية (Consent) المرفق</p>
+          <a href="${cFile.data}" download="${cFile.name}" class="btn btn-info" style="display:inline-block; text-decoration:none; padding:6px 14px; font-size:0.85rem;">⬇️ تحميل / فتح المستند</a>
+        </div>
+      `;
+    }
+
+    document.getElementById('imageViewerModal').style.display = 'flex';
+  }
+
   async function autoSaveRowStatus(dbId) {
     let item = allPreOpRecords.find(a => a.dbId === dbId);
     if (item) {
@@ -842,9 +921,9 @@
 
       let statusSelect = document.getElementById(`statusSelect_${dbId}`).value;
       let opDateVal = document.getElementById(`rowOpDate_${dbId}`).value;
-      let codeContainer = document.getElementById(`codeContainer_${dbId}`);
+      let detailsContainer = document.getElementById(`detailsContainer_${dbId}`);
       
-      codeContainer.style.display = (statusSelect === 'completed') ? 'block' : 'none';
+      detailsContainer.style.display = (statusSelect === 'completed') ? 'block' : 'none';
 
       let codeVal = document.getElementById(`rowCode_${dbId}`).value.trim();
 
@@ -876,6 +955,11 @@
       if (item.labImages && item.labImages.length > 0) {
         labBtn = `<br><button class="btn btn-info" style="padding:2px 6px; font-size:0.7rem; margin-top:3px;" onclick="viewPatientLabImages(${item.dbId})">📂 المستندات والأشعة (${item.labImages.length})</button>`;
       }
+      
+      let consentBadge = '';
+      if (item.consentFile) {
+        consentBadge = `<br><button class="btn btn-success" style="padding:2px 6px; font-size:0.7rem; margin-top:3px;" onclick="viewConsentFile(${item.dbId})">📎 عرض الإقرار (Consent)</button>`;
+      }
 
       tbody.innerHTML += `
         <tr>
@@ -892,7 +976,7 @@
           <td>${item.mh || '-'}</td>
           <td>${item.smoking || '-'}</td>
           <td>${item.sh || '-'}</td>
-          <td>${item.labs || '-'}${labBtn}</td>
+          <td>${item.labs || '-'}${labBtn}${consentBadge}</td>
           <td>${item.operation || '-'}</td>
           <td>${item.preOpPrep || '-'}</td>
           <td>${item.intraOp || '-'}</td>
@@ -1006,6 +1090,7 @@
       labImages: currentFormLabFiles,
       opStatus: 'pending',
       patientCode: '',
+      consentFile: null,
       notes: '',
       recordedBy: currentUser ? currentUser.full_name : 'غير محدد'
     };
