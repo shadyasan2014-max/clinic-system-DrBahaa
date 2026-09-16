@@ -366,47 +366,49 @@ body {
 
 <!-- Modal Manage Users (Admin Only) -->
 <div id="usersModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content" style="max-width: 700px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 16px;">
-      <h3 style="color: var(--primary);">👤 إدارة الأطباء والمستخدمين (خاص بالمشرف العام فقط)</h3>
+      <h3 style="color: var(--primary);">👤 إدارة الأطباء والمستخدمين والصلاحيات المخصصة</h3>
       <button onclick="closeUsersModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
     </div>
 
-    <!-- إضافة مستخدم -->
+    <!-- إضافة مستخدم مع الصلاحيات التفصيلية -->
     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
-      <h4 style="margin-bottom: 10px; color: var(--primary);">➕ إضافة طبيب / مستخدم جديد:</h4>
-      <div class="grid">
-        <div class="field"><label>اسم المستخدم (اليوزر)</label><input type="text" id="newUsername" placeholder="مثال: dr_ahmed"></div>
+      <h4 style="margin-bottom: 10px; color: var(--primary);">➕ إضافة مستخدم جديد وتحديد صلاحياته:</h4>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 10px;">
+        <div class="field"><label>اسم المستخدم (اليوزر)</label><input type="text" id="newUsername" placeholder="مثال: staff1"></div>
         <div class="field"><label>كلمة السر</label><input type="text" id="newPassword" placeholder="مثال: 123456"></div>
-        <div class="field"><label>الاسم الظاهر</label><input type="text" id="newFullName" placeholder="مثال: د. أحمد جراحة"></div>
-        <div class="field">
-          <label>نوع وصلاحية الحساب:</label>
-          <select id="newUserRole">
-            <option value="surgeon_follower" selected>🩺 دكتور جراحة المتابع</option>
-            <option value="nutrition_follower">🥗 دكتور تغذية المتابع</option>
-            <option value="admin_staff">📋 إداري</option>
-            <option value="accountant">💼 موظف حسابات (بيانات العملاء فقط)</option>
-            <option value="admin">⭐ مدير نظام كامل (كل الصلاحيات)</option>
-          </select>
+        <div class="field" style="grid-column: span 2;"><label>الاسم الظاهر</label><input type="text" id="newFullName" placeholder="مثال: أحمد (موظف الاستقبال)"></div>
+      </div>
+
+      <!-- خانات الصلاحيات المخصصة (Checkboxes) -->
+      <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 12px;">
+        <label style="font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">🔐 حدد الأقسام المسموح له بدخولها وصلاحياته:</label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 0.9rem;">
+          <label><input type="checkbox" id="perm_preop" checked> شيت العمليات (Pre-Op)</label>
+          <label><input type="checkbox" id="perm_clinics" checked> حجوزات العيادات (Clinics)</label>
+          <label><input type="checkbox" id="perm_postop" checked> متابعة ما بعد العملية (Post-Op)</label>
+          <label><input type="checkbox" id="perm_customers"> الحسابات والعملاء (Customers)</label>
+          <label style="color: var(--danger); font-weight: bold;"><input type="checkbox" id="perm_delete"> ⚠️ السماح بحذف الحالات</label>
         </div>
       </div>
-      <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="addNewUser()">➕ إضافة المستخدم وحفظه أونلاين</button>
+
+      <button class="btn btn-success" style="width: 100%; padding: 10px;" onclick="addNewUserWithPermissions()">➕ حفظ وإضافة المستخدم أونلاين</button>
     </div>
 
-    <!-- قائمة المستخدمين والحذف -->
-    <h4 style="color: var(--primary); margin-bottom: 8px;">📋 قائمة المستخدمين المسجلين حالياً:</h4>
+    <!-- قائمة المستخدمين الحالية -->
+    <h4 style="color: var(--primary); margin-bottom: 8px;">📋 قائمة المستخدمين وصلاحياتهم المسجلة:</h4>
     <div style="overflow-x: auto;">
       <table>
         <thead>
           <tr>
-            <th>الاسم الظاهر</th>
-            <th>اليوزر</th>
-            <th>الصلاحية</th>
+            <th>الاسم واليوزر</th>
+            <th>الصلاحيات المخصصة</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="usersTableBody">
-          <tr><td colspan="4" style="text-align:center; padding:10px;">⏳ جاري جلب المستخدمين...</td></tr>
+          <tr><td colspan="3" style="text-align:center; padding:10px;">⏳ جاري جلب المستخدمين...</td></tr>
         </tbody>
       </table>
     </div>
@@ -451,7 +453,7 @@ body {
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'block';
     
-    let roleText = currentUser.role === 'admin' ? '⭐ المشرف العام' : (currentUser.role === 'surgeon_follower' ? '🩺 دكتور جراحة المتابع' : (currentUser.role === 'nutrition_follower' ? '🥗 دكتور تغذية المتابع' : (currentUser.role === 'admin_staff' ? '📋 إداري' : '💼 إدارة الحسابات')));
+    let roleText = currentUser.role === 'admin' ? '⭐ المشرف العام' : '👤 مستخدم بصلاحيات مخصصة';
     document.getElementById('userBadge').innerText = `👤 ${currentUser.full_name} (${roleText})`;
 
     if (currentUser.role === 'admin') {
@@ -465,33 +467,34 @@ body {
   }
 
   function applyRolePermissions() {
+    if (!currentUser) return;
+
     let role = currentUser.role;
 
-    // 🔒 إظهار شريط الإحصائيات الحية للآدمن (Admin) فقط
+    // إظهار الإحصائيات الحية للآدمن فقط
     let statsGrid = document.querySelector('.stats-grid');
     if (statsGrid) {
       statsGrid.style.display = (role === 'admin') ? 'grid' : 'none';
     }
 
-    if (role === 'admin' || role === 'accountant') {
+    // إذا كان المشرف العام، يرى كل شيء بالكامل
+    if (role === 'admin') {
+      document.getElementById('cardPreOp').style.display = 'flex';
+      document.getElementById('cardClinics').style.display = 'flex';
+      document.getElementById('cardPostOp').style.display = 'flex';
       document.getElementById('cardAccounts').style.display = 'flex';
       document.getElementById('statCustomers').style.display = 'flex';
-    } else {
-      document.getElementById('cardAccounts').style.display = 'none';
-      document.getElementById('statCustomers').style.display = 'none';
+      return;
     }
 
-    if (role === 'accountant') {
-      document.getElementById('cardPreOp').style.display = 'none';
-      document.getElementById('statPreOp').style.display = 'none';
-      document.getElementById('cardPostOp').style.display = 'none';
-      document.getElementById('statPostOp').style.display = 'none';
-    } else {
-      document.getElementById('cardPreOp').style.display = 'flex';
-      document.getElementById('statPreOp').style.display = 'flex';
-      document.getElementById('cardPostOp').style.display = 'flex';
-      document.getElementById('statPostOp').style.display = 'flex';
-    }
+    // قراءة الصلاحيات المخصصة المحفوظة للمستخدم
+    let p = currentUser.permissions || { preop: true, clinics: true, postop: true, customers: false, canDelete: false };
+
+    document.getElementById('cardPreOp').style.display = p.preop ? 'flex' : 'none';
+    document.getElementById('cardClinics').style.display = p.clinics ? 'flex' : 'none';
+    document.getElementById('cardPostOp').style.display = p.postop ? 'flex' : 'none';
+    document.getElementById('cardAccounts').style.display = p.customers ? 'flex' : 'none';
+    document.getElementById('statCustomers').style.display = p.customers ? 'flex' : 'none';
   }
 
   function logoutPortal() {
@@ -501,7 +504,7 @@ body {
     document.getElementById('authOverlay').style.display = 'flex';
   }
 
-  /* 🔑 تغيير كلمة السر */
+  /* تغيير كلمة السر */
   function openChangePasswordModal() {
     if (!currentUser) return;
     document.getElementById('currentPassInput').value = '';
@@ -550,7 +553,7 @@ body {
     }
   }
 
-  /* 👤 إدارة المستخدمين للآدمن فقط */
+  /* إدارة المستخدمين والصلاحيات للآدمن فقط */
   function openUsersModal() {
     if (!currentUser || currentUser.role !== 'admin') {
       return alert('⚠️ غير مسموح: صلاحية إدارة المستخدمين متاحة فقط لحساب المشرف العام (Admin).');
@@ -567,35 +570,47 @@ body {
     if (!currentUser || currentUser.role !== 'admin') return;
 
     let tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px;">⏳ جاري جلب المستخدمين...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:10px;">⏳ جاري جلب المستخدمين...</td></tr>';
 
     const { data, error } = await supabaseClient.from('system_users').select('*').order('id', { ascending: false });
 
     if (!error && data) {
       tbody.innerHTML = '';
       data.forEach(user => {
-        let roleBadge = user.role === 'admin' ? '<b style="color:var(--accent-gold);">⭐ مدير نظام</b>' : (user.role === 'surgeon_follower' ? '<b style="color:var(--success);">🩺 دكتور جراحة المتابع</b>' : (user.role === 'nutrition_follower' ? '<b style="color:#0284c7;">🥗 دكتور تغذية المتابع</b>' : (user.role === 'admin_staff' ? '<b style="color:#7c3aed;">📋 إداري</b>' : '<b style="color:var(--cyan);">💼 حسابات</b>')));
-        
-        let deleteBtn = '';
-        if (user.username !== currentUser.username) {
-          deleteBtn = `<button class="btn btn-danger" style="padding: 4px 10px; font-size:0.78rem;" onclick="deleteUser(${user.id}, '${user.full_name}')">🗑️ حذف</button>`;
+        if (user.role === 'admin') {
+          tbody.innerHTML += `
+            <tr>
+              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span></td>
+              <td><b style="color:var(--accent-gold);">⭐ مدير نظام كامل (كل الصلاحيات)</b></td>
+              <td><span style="color:#94a3b8; font-size:0.78rem;">(المشرف الرئيسي)</span></td>
+            </tr>
+          `;
         } else {
-          deleteBtn = `<span style="color:#94a3b8; font-size:0.78rem;">(حسابك الحالي)</span>`;
-        }
+          let p = user.permissions || { preop: true, clinics: true, postop: true, customers: false, canDelete: false };
+          let permsList = [];
+          if (p.preop) permsList.push('Pre-Op');
+          if (p.clinics) permsList.push('Clinics');
+          if (p.postop) permsList.push('Post-Op');
+          if (p.customers) permsList.push('Customers');
+          if (p.canDelete) permsList.push('⚠️ صلاحية الحذف');
 
-        tbody.innerHTML += `
-          <tr>
-            <td><b>${user.full_name}</b></td>
-            <td>${user.username}</td>
-            <td>${roleBadge}</td>
-            <td>${deleteBtn}</td>
-          </tr>
-        `;
+          let deleteBtn = (user.username !== currentUser.username) ? 
+            `<button class="btn btn-danger" style="padding: 4px 10px; font-size:0.78rem;" onclick="deleteUser(${user.id}, '${user.full_name}')">🗑️ حذف</button>` : 
+            `<span style="color:#94a3b8; font-size:0.78rem;">(حسابك الحالي)</span>`;
+
+          tbody.innerHTML += `
+            <tr>
+              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span></td>
+              <td style="font-size:0.85rem; color:var(--primary); font-weight:bold;">${permsList.join(' | ')}</td>
+              <td>${deleteBtn}</td>
+            </tr>
+          `;
+        }
       });
     }
   }
 
-  async function addNewUser() {
+  async function addNewUserWithPermissions() {
     if (!currentUser || currentUser.role !== 'admin') {
       return alert('⚠️ غير مسموح: إضافة مستخدمين جديدة متاحة للآدمن فقط.');
     }
@@ -603,14 +618,28 @@ body {
     let username = document.getElementById('newUsername').value.trim();
     let password = document.getElementById('newPassword').value.trim();
     let full_name = document.getElementById('newFullName').value.trim();
-    let role = document.getElementById('newUserRole').value;
 
     if (!username || !password || !full_name) return alert('برجاء كتابة كل البيانات المطلوبة');
 
-    const { error } = await supabaseClient.from('system_users').insert([{ username, password, full_name, role: role }]);
+    // تجميع الصلاحيات المحددة من مربعات الاختيار
+    let permissions = {
+      preop: document.getElementById('perm_preop').checked,
+      clinics: document.getElementById('perm_clinics').checked,
+      postop: document.getElementById('perm_postop').checked,
+      customers: document.getElementById('perm_customers').checked,
+      canDelete: document.getElementById('perm_delete').checked
+    };
+
+    const { error } = await supabaseClient.from('system_users').insert([{
+      username,
+      password,
+      full_name,
+      role: 'custom',
+      permissions: permissions
+    }]);
 
     if (!error) {
-      alert('✅ تم إضافة المستخدم بنجاح!');
+      alert('✅ تم إضافة المستخدم وتحديد صلاحياته بنجاح!');
       document.getElementById('newUsername').value = '';
       document.getElementById('newPassword').value = '';
       document.getElementById('newFullName').value = '';
@@ -651,7 +680,8 @@ body {
     const { count: appCount } = await supabaseClient.from('appointments').select('*', { count: 'exact', head: true });
     document.getElementById('countClinics').innerText = appCount || 0;
 
-    if (role === 'admin' || role === 'accountant') {
+    let p = currentUser.permissions || {};
+    if (role === 'admin' || p.customers) {
       const { count: custCount } = await supabaseClient.from('customers').select('*', { count: 'exact', head: true });
       document.getElementById('countCustomers').innerText = custCount || 0;
     }
