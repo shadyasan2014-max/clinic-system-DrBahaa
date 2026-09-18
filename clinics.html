@@ -324,7 +324,7 @@
 
 <!-- Modal Online Booking Requests (طلبات حجز المرضى الخارجية) -->
 <div id="onlineRequestsModal" class="modal">
-  <div class="modal-content" style="max-width: 900px;">
+  <div class="modal-content" style="max-width: 950px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
       <h3 style="color: var(--primary);">🌐 طلبات الحجز الواردة من المرضى أونلاين (قيد الانتظار)</h3>
       <button onclick="toggleOnlineRequestsModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
@@ -339,7 +339,7 @@
             <th>الفرع المطلوب</th>
             <th>نوع الزيارة والملاحظات</th>
             <th>وقت الطلب</th>
-            <th>الإجراءات (تأكيد وإرسال واتساب)</th>
+            <th>الإجراءات (تأكيد، اعتذار واتساب، رفض، وحذف)</th>
           </tr>
         </thead>
         <tbody id="onlineRequestsTableBody">
@@ -543,9 +543,14 @@
     onlineBookingRequests.forEach(req => {
       let bInfo = clinicsDbData.find(b => b.branch_name === req.branch_name) || { address: 'العنوان غير مدخل', map_link: '#' };
       
-      let cleanPhone = req.phone.startsWith('0') ? '2' + req.phone : req.phone;
-      let msg = `أهلاً بك يا ${req.patient_name}\nنود إعلامك بأنه تم تأكيد حجزك في فرع (${req.branch_name}) لدى د. بهاء شكري.\n📍 العنوان: ${bInfo.address}\n🗺️ اللوكيشن: ${bInfo.map_link}\nنتشرف بزيارتك!`;
-      let whatsAppUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      let rawPhone = req.phone.split('/')[0].trim();
+      let cleanPhone = rawPhone.startsWith('0') ? '2' + rawPhone : rawPhone;
+      
+      let msgConfirm = `أهلاً بك يا ${req.patient_name}\nنود إعلامك بأنه تم تأكيد حجزك في فرع (${req.branch_name}) لدى د. بهاء شكري.\n📍 العنوان: ${bInfo.address}\n🗺️ اللوكيشن: ${bInfo.map_link}\nنتشرف بزيارتك!`;
+      let whatsAppConfirmUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgConfirm)}`;
+
+      let msgReject = `أهلاً بك يا ${req.patient_name}\nنعتذر لك بشدة، لتعذر تأكيد الحجز في فرع (${req.branch_name}) نظراً لاكتمال العدد المسموح به في هذا اليوم.\nنتطلع لرؤيتك في المواعيد القادمة، شكراً لتفهمك.`;
+      let whatsAppRejectUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgReject)}`;
 
       tbody.innerHTML += `
         <tr>
@@ -556,9 +561,11 @@
           <td><small>${new Date(req.created_at).toLocaleString('ar-EG')}</small></td>
           <td>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="confirmOnlineRequest(${req.id}, '${req.branch_name}', '${req.patient_name}', '${req.phone}', '${req.visit_type}')">✅ تأكيد ونقل للجدول</button>
-              <a href="${whatsAppUrl}" target="_blank" class="btn btn-whatsapp" style="padding:5px 10px; font-size:0.8rem;">💬 إرسال واتساب</a>
+              <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="confirmOnlineRequest(${req.id}, '${req.branch_name}', '${req.patient_name}', '${req.phone}', '${req.visit_type}')">✅ تأكيد ونقل</button>
+              <a href="${whatsAppConfirmUrl}" target="_blank" class="btn btn-whatsapp" style="padding:5px 10px; font-size:0.8rem;">💬 واتساب تأكيد</a>
+              <a href="${whatsAppRejectUrl}" target="_blank" class="btn btn-warning" style="padding:5px 10px; font-size:0.8rem; background:#ca8a04;" title="إرسال رسالة اعتذار لاكتمال العدد">💬 اعتذار واتساب</a>
               <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="rejectOnlineRequest(${req.id})">❌ رفض</button>
+              <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; background:#64748b;" onclick="deleteOnlineRequest(${req.id})">🗑️ حذف</button>
             </div>
           </td>
         </tr>
@@ -585,6 +592,18 @@
     if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
       await supabaseClient.from('patient_online_bookings').update({ status: 'rejected' }).eq('id', reqId);
       fetchOnlineBookingRequests();
+    }
+  }
+
+  async function deleteOnlineRequest(reqId) {
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا الطلب نهائياً من قاعدة البيانات؟")) {
+      const { error } = await supabaseClient.from('patient_online_bookings').delete().eq('id', reqId);
+      if (!error) {
+        alert("✅ تم حذف الطلب بنجاح.");
+        fetchOnlineBookingRequests();
+      } else {
+        alert("⚠️ تعذر حذف الطلب، يرجى المحاولة لاحقاً.");
+      }
     }
   }
 
