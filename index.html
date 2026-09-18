@@ -372,13 +372,31 @@ body {
       <button onclick="closeUsersModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
     </div>
 
-    <!-- إضافة مستخدم مع الصلاحيات التفصيلية -->
+    <!-- إضافة مستخدم مع التخصص والصلاحيات التفصيلية -->
     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
-      <h4 style="margin-bottom: 10px; color: var(--primary);">➕ إضافة مستخدم جديد وتحديد صلاحياته:</h4>
+      <h4 style="margin-bottom: 10px; color: var(--primary);">➕ إضافة مستخدم جديد وتحديد تخصصه وصلاحياته:</h4>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 10px;">
         <div class="field"><label>اسم المستخدم (اليوزر)</label><input type="text" id="newUsername" placeholder="مثال: staff1"></div>
         <div class="field"><label>كلمة السر</label><input type="text" id="newPassword" placeholder="مثال: 123456"></div>
         <div class="field" style="grid-column: span 2;"><label>الاسم الظاهر</label><input type="text" id="newFullName" placeholder="مثال: أحمد (موظف الاستقبال)"></div>
+        
+        <!-- اختيار التخصص -->
+        <div class="field" style="grid-column: span 2;">
+          <label>التخصص / الوظيفة:</label>
+          <select id="userSpecialty" onchange="checkOtherSpecialty(this)">
+            <option value="دكتور جراحة">دكتور جراحة</option>
+            <option value="دكتور تغذية">دكتور تغذية</option>
+            <option value="حسابات">حسابات</option>
+            <option value="اداري">اداري</option>
+            <option value="اخري">اخري</option>
+          </select>
+        </div>
+        
+        <!-- حقل يظهر فقط عند اختيار "اخري" -->
+        <div class="field" id="otherSpecialtyBox" style="grid-column: span 2; display: none;">
+          <label>اكتب التخصص الآخر:</label>
+          <input type="text" id="otherSpecialtyInput" placeholder="اكتب التخصص هنا...">
+        </div>
       </div>
 
       <!-- خانات الصلاحيات المخصصة (Checkboxes) -->
@@ -403,7 +421,7 @@ body {
       <table>
         <thead>
           <tr>
-            <th>الاسم واليوزر</th>
+            <th>الاسم والتخصص</th>
             <th>الصلاحيات المخصصة</th>
             <th>الإجراءات</th>
           </tr>
@@ -454,8 +472,8 @@ body {
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'block';
     
-    let roleText = currentUser.role === 'admin' ? '⭐ المشرف العام' : '👤 مستخدم بصلاحيات مخصصة';
-    document.getElementById('userBadge').innerText = `👤 ${currentUser.full_name} (${roleText})`;
+    let specText = currentUser.specialty || (currentUser.role === 'admin' ? 'مدير نظام' : 'مستخدم');
+    document.getElementById('userBadge').innerText = `👤 ${currentUser.full_name} (${specText})`;
 
     if (currentUser.role === 'admin') {
       document.getElementById('manageUsersBtn').style.display = 'inline-block';
@@ -503,6 +521,17 @@ body {
     currentUser = null;
     document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('authOverlay').style.display = 'flex';
+  }
+
+  /* إظهار أو إخفاء حقل "اخري" */
+  function checkOtherSpecialty(select) {
+    let box = document.getElementById('otherSpecialtyBox');
+    if (select.value === 'اخري') {
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+      document.getElementById('otherSpecialtyInput').value = '';
+    }
   }
 
   /* تحديد واختيار كل الصلاحيات عند اختيار مدير نظام */
@@ -588,10 +617,11 @@ body {
     if (!error && data) {
       tbody.innerHTML = '';
       data.forEach(user => {
+        let userSpec = user.specialty || (user.role === 'admin' ? 'مدير نظام' : 'مستخدم');
         if (user.role === 'admin') {
           tbody.innerHTML += `
             <tr>
-              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span></td>
+              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span><br><span style="color:var(--accent-gold); font-weight:bold;">(${userSpec})</span></td>
               <td><b style="color:var(--accent-gold);">⭐ مدير نظام كامل (كل الصلاحيات)</b></td>
               <td><span style="color:#94a3b8; font-size:0.78rem;">(المشرف الرئيسي)</span></td>
             </tr>
@@ -611,7 +641,7 @@ body {
 
           tbody.innerHTML += `
             <tr>
-              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span></td>
+              <td><b>${user.full_name}</b><br><span style="color:#64748b; font-size:0.8rem;">${user.username}</span><br><span style="color:var(--cyan); font-weight:bold;">(${userSpec})</span></td>
               <td style="font-size:0.85rem; color:var(--primary); font-weight:bold;">${permsList.join(' | ')}</td>
               <td>${deleteBtn}</td>
             </tr>
@@ -629,6 +659,10 @@ body {
     let username = document.getElementById('newUsername').value.trim();
     let password = document.getElementById('newPassword').value.trim();
     let full_name = document.getElementById('newFullName').value.trim();
+    let specSelect = document.getElementById('userSpecialty').value;
+    let otherSpec = document.getElementById('otherSpecialtyInput').value.trim();
+
+    let finalSpecialty = (specSelect === 'اخري') ? (otherSpec || 'أخرى') : specSelect;
 
     if (!username || !password || !full_name) return alert('برجاء كتابة كل البيانات المطلوبة');
 
@@ -647,6 +681,7 @@ body {
       username,
       password,
       full_name,
+      specialty: finalSpecialty,
       role: isAdminFull ? 'admin' : 'custom',
       permissions: permissions
     }]);
@@ -656,6 +691,9 @@ body {
       document.getElementById('newUsername').value = '';
       document.getElementById('newPassword').value = '';
       document.getElementById('newFullName').value = '';
+      document.getElementById('otherSpecialtyInput').value = '';
+      document.getElementById('userSpecialty').value = 'دكتور جراحة';
+      document.getElementById('otherSpecialtyBox').style.display = 'none';
       document.getElementById('perm_admin').checked = false;
       fetchSystemUsersList();
     } else {
