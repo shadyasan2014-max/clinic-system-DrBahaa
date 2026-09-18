@@ -122,7 +122,7 @@
     </div>
 
     <div class="field">
-      <label>اسم المريض بالكامل (الاسم الثلاثي على الأقل):</label>
+      <label>اسم المريض بالكامل:</label>
       <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي...">
     </div>
 
@@ -221,14 +221,7 @@
     let notes = document.getElementById('patientNotes').value.trim();
 
     if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
-    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض ثلاثياً.');
-    
-    // التحقق البسيط من أن الاسم يتكون من ثلاث كلمات على الأقل
-    let nameParts = patient_name.split(/\s+/);
-    if (nameParts.length < 3) {
-      return alert('⚠️ يرجى كتابة الاسم ثلاثياً على الأقل لتمييز المريض بدقة.');
-    }
-
+    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض بالكامل.');
     if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم الهاتف الأساسي بشكل صحيح.');
 
     // دمج الرقمين في حقل الهاتف ليظهروا معاً في لوحة التحكم لديك
