@@ -562,10 +562,10 @@
           <td><span class="visit-badge">${req.visit_type}</span><br><small>${req.notes || ''}</small></td>
           <td>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="confirmAndPromptWhatsApp(${req.id}, '${req.branch_name}', '${req.patient_name}', '${req.phone}', '${req.visit_type}', '${reqDate}', '${whatsAppConfirmUrl}')">✅ تأكيد ونقل</button>
+              <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="confirmAndOpenWhatsApp(${req.id}, '${req.branch_name}', '${req.patient_name}', '${req.phone}', '${req.visit_type}', '${reqDate}', '${whatsAppConfirmUrl}')">✅ تأكيد ونقل</button>
               <a href="${whatsAppConfirmUrl}" target="_blank" class="btn btn-whatsapp" style="padding:5px 10px; font-size:0.8rem;">💬 واتساب تأكيد</a>
               <a href="${whatsAppRejectUrl}" target="_blank" class="btn btn-warning" style="padding:5px 10px; font-size:0.8rem; background:#ca8a04;" title="إرسال رسالة اعتذار لاكتمال العدد أو خطأ التاريخ">💬 اعتذار واتساب</a>
-              <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="rejectOnlineRequest(${req.id}, '${whatsAppRejectUrl}')">❌ رفض</button>
+              <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="rejectAndOpenWhatsApp(${req.id}, '${whatsAppRejectUrl}')">❌ رفض</button>
               <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; background:#64748b;" onclick="deleteOnlineRequest(${req.id})">🗑️ حذف</button>
             </div>
           </td>
@@ -574,7 +574,7 @@
     });
   }
 
-  async function confirmAndPromptWhatsApp(reqId, branchName, patientName, phone, visitType, bookingDate, whatsAppUrl) {
+  async function confirmAndOpenWhatsApp(reqId, branchName, patientName, phone, visitType, bookingDate, whatsAppUrl) {
     let targetDate = bookingDate || new Date().toISOString().split('T')[0];
     
     let payload = { name: patientName, phone1: phone, phone2: "", clinic: branchName, date: targetDate, visitType: visitType, surgeryDate: "", patientCode: "", status: "pending", files: [], paperImg: "", notes: "تم الحجز أونلاين بمعرفة المريض", surgeryType: "", hospitalName: "", fee: 0, isFree: false };
@@ -584,23 +584,21 @@
 
     await supabaseClient.from('patient_online_bookings').update({ status: 'confirmed' }).eq('id', reqId);
 
-    alert(`✅ تم تأكيد حجز المريض (${patientName}) ونقله لتاريخ (${targetDate}) بنجاح!`);
-    
-    if (confirm("هل تريد إرسال رسالة التأكيد عبر الواتساب للمريض الآن؟")) {
-      window.open(whatsAppUrl, '_blank');
-    }
+    // فتح الواتساب أولاً قبل أي تنبيه لتجنب حظر المتصفح للمنافذ المنبثقة
+    window.open(whatsAppUrl, '_blank');
+
+    alert(`✅ تم تأكيد حجز المريض (${patientName}) ونقله لتاريخ (${targetDate}) في جدول عيادة (${branchName}) بنجاح!`);
 
     fetchOnlineBookingRequests();
     fetchAppointmentsFromSupabase();
   }
 
-  async function rejectOnlineRequest(reqId, whatsAppRejectUrl) {
+  async function rejectAndOpenWhatsApp(reqId, whatsAppRejectUrl) {
     if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
       await supabaseClient.from('patient_online_bookings').update({ status: 'rejected' }).eq('id', reqId);
       
-      if (confirm("هل تريد إرسال رسالة الاعتذار (لاكتمال العدد أو خطأ التاريخ) عبر الواتساب للمريض؟")) {
-        window.open(whatsAppRejectUrl, '_blank');
-      }
+      // فتح واتساب الاعتذار مباشرة
+      window.open(whatsAppRejectUrl, '_blank');
 
       fetchOnlineBookingRequests();
     }
