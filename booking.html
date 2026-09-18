@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حجز موعد عيادة - المنظومة الطبية</title>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #0f4c5c;
+    --primary-hover: #0a3641;
+    --accent-gold: #d97706;
+    --accent-lime: #84cc16;
+    --bg: #f8fafc;
+    --text: #1e293b;
+    --border: #cbd5e1;
+    --success: #16a34a;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(rgba(15, 76, 92, 0.9), rgba(15, 76, 92, 0.9)), url('doctor.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--text);
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .booking-container {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+    border-top: 6px solid var(--accent-lime);
+  }
+  .clinic-header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  .clinic-header h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 6px; }
+  .clinic-header p { font-size: 0.9rem; color: #64748b; }
+  
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field label { font-size: 0.88rem; font-weight: 700; color: #334155; }
+  .field input, .field select, .field textarea {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1);
+  }
+  .btn-submit {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 14px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 10px;
+  }
+  .btn-submit:hover { background: #15803d; }
+  
+  /* تفاصيل الفرع المختصرة تظهر عند الاختيار */
+  .branch-info-box {
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #475569;
+    margin-bottom: 16px;
+    border-right: 4px solid var(--primary);
+    display: none;
+  }
+  
+  #successMessage {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+  #successMessage h3 { color: var(--success); font-size: 1.4rem; margin-bottom: 10px; }
+  #successMessage p { color: #475569; font-size: 0.95rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="booking-container">
+  
+  <!-- فورم الحجز -->
+  <div id="bookingFormSection">
+    <div class="clinic-header">
+      <h2>🏥 حجز موعد بالعيادة</h2>
+      <p>املأ البيانات أدناه وسيتواصل معك فريق العيادة لتأكيد الموعد</p>
+    </div>
+
+    <div class="field">
+      <label>اختر فرع العيادة:</label>
+      <select id="branchSelect" onchange="showBranchDetails()">
+        <option value="">⏳ جاري تحميل العيادات والفروع...</option>
+      </select>
+    </div>
+
+    <!-- كارت تفاصيل الفرع (العنوان والمواعيد) -->
+    <div id="branchInfoBox" class="branch-info-box">
+      📍 <span id="lblAddress">...</span><br>
+      ⏰ <span id="lblHours">...</span>
+    </div>
+
+    <div class="field">
+      <label>اسم المريض بالكامل:</label>
+      <input type="text" id="patientName" placeholder="اكتب اسمك الثلاثي...">
+    </div>
+
+    <div class="field">
+      <label>رقم الهاتف (للتواصل وتأكيد الحجز):</label>
+      <input type="tel" id="patientPhone" placeholder="01xxxxxxxxx">
+    </div>
+
+    <div class="field">
+      <label>نوع الزيارة:</label>
+      <select id="visitType">
+        <option value="كشف جديد">كشف جديد</option>
+        <option value="استشارة">استشارة / متابعة</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>ملاحظات إضافية (اختياري):</label>
+      <textarea id="patientNotes" rows="2" placeholder="اكتب أي تفاصيل أو أعراض..."></textarea>
+    </div>
+
+    <button class="btn-submit" onclick="submitOnlineBooking()">📅 إرسال طلب الحجز الآن</button>
+  </div>
+
+  <!-- رسالة النجاح بعد الحجز -->
+  <div id="successMessage">
+    <h3>✅ تم إرسال طلبك بنجاح!</h3>
+    <p>شكراً لك. طلب حجزك الآن في <b>قيد المراجعة</b> من قِبل طاقم العيادة، وسيتصل بك المسؤولون أو يرسلون لك تفاصيل العنوان واللوكيشن عبر الواتساب في أقرب وقت لتأكيد الموعد.</p>
+    <button class="btn-submit" style="background: var(--primary); margin-top: 20px;" onclick="location.reload()">تسجيل حجز جديد</button>
+  </div>
+
+</div>
+
+<script>
+  // استخدم نفس مفاتيح Supabase الخاصة بمشروعك
+  const SUPABASE_URL = "https://gfheumheyrmyrczvlwdh.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_SFmYaaTF08Zt2gKPmk7UUw_siKQ_tDt";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let branchesData = [];
+
+  window.onload = function() {
+    loadBranchesForBooking();
+  };
+
+  async function loadBranchesForBooking() {
+    let select = document.getElementById('branchSelect');
+    const { data, error } = await supabaseClient.from('clinic_branches').select('*');
+    
+    if (!error && data && data.length > 0) {
+      branchesData = data;
+      select.innerHTML = '<option value="">-- اضغط لاختيار الفرع المناسب --</option>';
+      data.forEach(b => {
+        select.innerHTML += `<option value="${b.branch_name}">${b.branch_name}</option>`;
+      });
+    } else {
+      select.innerHTML = '<option value="">⚠️ لا توجد فروع متاحة حالياً</option>';
+    }
+  }
+
+  function showBranchDetails() {
+    let selectedName = document.getElementById('branchSelect').value;
+    let box = document.getElementById('branchInfoBox');
+    
+    if (!selectedName) {
+      box.style.display = 'none';
+      return;
+    }
+
+    let branch = branchesData.find(b => b.branch_name === selectedName);
+    if (branch) {
+      document.getElementById('lblAddress').innerText = branch.address;
+      document.getElementById('lblHours').innerText = `${branch.working_days} (${branch.working_hours})`;
+      box.style.display = 'block';
+    }
+  }
+
+  async function submitOnlineBooking() {
+    let branch_name = document.getElementById('branchSelect').value;
+    let patient_name = document.getElementById('patientName').value.trim();
+    let phone = document.getElementById('patientPhone').value.trim();
+    let visit_type = document.getElementById('visitType').value;
+    let notes = document.getElementById('patientNotes').value.trim();
+
+    if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
+    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض.');
+    if (!phone || phone.length < 10) return alert('⚠️ يرجى كتابة رقم هاتف صحيح للتواصل.');
+
+    const { error } = await supabaseClient.from('patient_online_bookings').insert([{
+      branch_name,
+      patient_name,
+      phone,
+      visit_type,
+      notes,
+      status: 'pending' // قيد الانتظار لحين تأكيد التيم
+    }]);
+
+    if (!error) {
+      document.getElementById('bookingFormSection').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+    } else {
+      alert('⚠️ حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
+    }
+  }
+</script>
+</body>
+</html>
