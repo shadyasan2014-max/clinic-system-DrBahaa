@@ -100,7 +100,6 @@
 
 <div class="booking-container">
   
-  <!-- فورم الحجز -->
   <div id="bookingFormSection">
     <div class="clinic-header">
       <h2>🏥 حجز موعد بالعيادة</h2>
@@ -119,6 +118,11 @@
       📍 <span id="lblAddress">...</span><br>
       ⏰ <span id="lblHours">...</span><br>
       🗺️ <a id="lblMap" href="#" target="_blank" style="color:var(--primary); font-weight:bold; display:inline-block; margin-top:4px;">فتح اللوكيشن على خريطة جوجل ↗</a>
+    </div>
+
+    <div class="field">
+      <label>📅 تاريخ الحجز المطلوب:</label>
+      <input type="date" id="bookingDate">
     </div>
 
     <div class="field">
@@ -152,7 +156,6 @@
     <button class="btn-submit" onclick="submitOnlineBooking()">📅 إرسال طلب الحجز الآن</button>
   </div>
 
-  <!-- رسالة النجاح بعد الحجز -->
   <div id="successMessage">
     <h3>✅ تم إرسال طلبك بنجاح!</h3>
     <p>شكراً لك. طلب حجزك الآن في <b>قيد المراجعة</b> من قِبل طاقم العيادة، وسيتصل بك المسؤولون أو يرسلون لك تفاصيل العنوان واللوكيشن عبر الواتساب في أقرب وقت لتأكيد الموعد.</p>
@@ -169,6 +172,7 @@
   let branchesData = [];
 
   window.onload = function() {
+    document.getElementById('bookingDate').valueAsDate = new Date();
     loadBranchesForBooking();
   };
 
@@ -214,6 +218,7 @@
 
   async function submitOnlineBooking() {
     let branch_name = document.getElementById('branchSelect').value;
+    let booking_date = document.getElementById('bookingDate').value;
     let patient_name = document.getElementById('patientName').value.trim();
     let phone1 = document.getElementById('patientPhone1').value.trim();
     let phone2 = document.getElementById('patientPhone2').value.trim();
@@ -221,14 +226,15 @@
     let notes = document.getElementById('patientNotes').value.trim();
 
     if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
+    if (!booking_date) return alert('⚠️ يرجى تحديد تاريخ الحجز.');
     if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض بالكامل.');
     if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم الهاتف الأساسي بشكل صحيح.');
 
-    // دمج الرقمين في حقل الهاتف ليظهروا معاً في لوحة التحكم لديك
     let fullPhones = phone1 + (phone2 ? ` / ${phone2}` : '');
 
     const { error } = await supabaseClient.from('patient_online_bookings').insert([{
       branch_name,
+      booking_date,
       patient_name,
       phone: fullPhones,
       visit_type,
