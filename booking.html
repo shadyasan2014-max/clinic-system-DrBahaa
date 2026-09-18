@@ -126,12 +126,12 @@
     </div>
 
     <div class="field">
-      <label>اسم المريض بالكامل:</label>
-      <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي...">
+      <label>اسم المريض بالكامل (يجب إدخال الاسم الثلاثي على الأقل):</label>
+      <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي">
     </div>
 
     <div class="field">
-      <label>رقم الهاتف الأساسي (للتواصل وتأكيد الحجز):</label>
+      <label>رقم الهاتف الأساسي (يجب أن يكون عليه واتساب لإرسال التأكيد أو الإلغاء):</label>
       <input type="tel" id="patientPhone1" placeholder="01xxxxxxxxx">
     </div>
 
@@ -158,7 +158,7 @@
 
   <div id="successMessage">
     <h3>✅ تم إرسال طلبك بنجاح!</h3>
-    <p>شكراً لك. طلب حجزك الآن في <b>قيد المراجعة</b> من قِبل طاقم العيادة، وسيتصل بك المسؤولون أو يرسلون لك تفاصيل العنوان واللوكيشن عبر الواتساب في أقرب وقت لتأكيد الموعد.</p>
+    <p>شكراً لك. طلب حجزك الآن في <b>قيد المراجعة</b> من قِبل طاقم العيادة، وسنرسل لك تفاصيل التأكيد أو الاعتذار عبر رقم الواتساب المسجل في أقرب وقت.</p>
     <button class="btn-submit" style="background: var(--primary); margin-top: 20px;" onclick="location.reload()">تسجيل حجز جديد</button>
   </div>
 
@@ -227,8 +227,15 @@
 
     if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
     if (!booking_date) return alert('⚠️ يرجى تحديد تاريخ الحجز.');
-    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض بالكامل.');
-    if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم الهاتف الأساسي بشكل صحيح.');
+    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض.');
+
+    // التحقق البرمجي من أن الاسم ثلاثي على الأقل (3 كلمات)
+    let nameParts = patient_name.split(/\s+/);
+    if (nameParts.length < 3) {
+      return alert('⚠️ عذراً، يجب إدخال الاسم ثلاثياً على الأقل (مثال: أحمد محمد علي).');
+    }
+
+    if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم هاتف واتساب أساسي صحيح للتواصل.');
 
     let fullPhones = phone1 + (phone2 ? ` / ${phone2}` : '');
 
