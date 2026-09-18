@@ -801,6 +801,7 @@
           ${attachBtn}
           <button class="btn btn-warning" style="padding: 5px 10px; font-size:0.8rem;" onclick="openCheckInModal(${app.dbId})">✏️ تعديل الزيارة</button>
           ${app.status !== 'cancelled' ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="cancelAppointment(${app.dbId})">❌ إلغاء</button>` : `<button class="btn btn-secondary" style="padding: 5px 10px; font-size:0.8rem;" onclick="restoreAppointment(${app.dbId})">🔄 تفعيل</button>`}
+          <button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem; background:#64748b;" onclick="deleteAppointmentPermanent(${app.dbId})">🗑️ حذف</button>
         </div>
       `;
 
@@ -817,6 +818,18 @@
         </tr>
       `;
     });
+  }
+
+  async function deleteAppointmentPermanent(dbId) {
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا الحجز نهائياً من قاعدة البيانات؟")) {
+      const { error } = await supabaseClient.from('appointments').delete().eq('id', dbId);
+      if (!error) {
+        alert("✅ تم حذف الحجز نهائياً بنجاح.");
+        fetchAppointmentsFromSupabase();
+      } else {
+        alert("⚠️ تعذر حذف الحجز، يرجى المحاولة لاحقاً.");
+      }
+    }
   }
 
   async function addOrUpdateAppointment() {
