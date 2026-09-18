@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حجز موعد عيادة - المنظومة الطبية</title>
+<title>نظام إدارة العيادات والحجوزات - د. بهاء شكري</title>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -13,248 +13,1433 @@
     --accent-gold: #d97706;
     --accent-lime: #84cc16;
     --bg: #f8fafc;
+    --card-bg: #ffffff;
     --text: #1e293b;
     --border: #cbd5e1;
     --success: #16a34a;
+    --warning: #ca8a04;
     --danger: #dc2626;
   }
+  
   * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-  body {
-    background: linear-gradient(rgba(15, 76, 92, 0.9), rgba(15, 76, 92, 0.9)), url('doctor.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: var(--text);
-    padding: 20px;
-    min-height: 100vh;
+  body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+  .container { max-width: 1180px; margin: 0 auto; }
+  
+  header { 
+    background: var(--primary); 
+    color: white; 
+    padding: 18px 24px; 
+    border-radius: 14px; 
+    margin-bottom: 24px; 
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(15, 76, 92, 0.15); 
+    border-bottom: 3px solid var(--accent-lime);
   }
-  .booking-container {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 20px 35px rgba(0,0,0,0.25);
-    border-top: 6px solid var(--accent-lime);
-  }
-  .clinic-header {
-    text-align: center;
-    margin-bottom: 25px;
-  }
-  .clinic-header h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 6px; }
-  .clinic-header p { font-size: 0.9rem; color: #64748b; }
-  
-  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-  .field label { font-size: 0.88rem; font-weight: 700; color: #334155; }
-  .field input, .field select, .field textarea {
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: 0.2s;
-  }
-  .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1);
-  }
-  .btn-submit {
-    background: var(--success);
-    color: white;
-    border: none;
-    padding: 14px;
-    width: 100%;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
+  .brand-logo { 
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+    text-decoration: none; 
+    color: inherit; 
     cursor: pointer;
-    transition: 0.2s;
-    margin-top: 10px;
+    transition: opacity 0.2s;
   }
-  .btn-submit:hover { background: #15803d; }
+  .brand-logo:hover { opacity: 0.9; }
+  .logo-box {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-lime);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+  .header-text h1 { font-size: 1.4rem; margin-bottom: 2px; color: #ffffff; }
+  .header-text p { font-size: 0.88rem; color: var(--accent-lime); font-weight: 500; }
   
-  .branch-info-box {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: #475569;
-    margin-bottom: 16px;
-    border-right: 4px solid var(--primary);
-    display: none;
-  }
+  .card { background: var(--card-bg); border-radius: 12px; padding: 24px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
+  .card-title { font-size: 1.15rem; font-weight: bold; color: var(--primary); margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
   
-  #successMessage {
-    display: none;
-    text-align: center;
-    padding: 20px;
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.88rem; font-weight: 600; color: #334155; }
+  .field input, .field select, .field textarea { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1); }
+
+  .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { background: var(--primary-hover); }
+  .btn-success { background: var(--success); }
+  .btn-success:hover { background: #15803d; }
+  .btn-secondary { background: #475569; }
+  .btn-secondary:hover { background: #334155; }
+  .btn-danger { background: var(--danger); }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-warning { background: var(--accent-gold); color: white; }
+  .btn-warning:hover { background: #b45309; }
+  .btn-info { background: #0284c7; color: white; }
+  .btn-info:hover { background: #0369a1; }
+  .btn-whatsapp { background: #25d366; color: white; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+  .btn-whatsapp:hover { background: #22bf5b; }
+  
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; text-align: right; }
+  th, td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.92rem; }
+  th { background-color: #f1f5f9; color: var(--primary); font-weight: bold; }
+  
+  .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+  .status-pending { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+  .status-done { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .status-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+  .visit-badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+  .price-badge { background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; }
+  .free-badge { background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; }
+
+  .branch-card-item { background: #fff; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+
+  /* Modal Styles */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; padding: 20px; z-index: 1000; }
+  .modal-content { background: white; padding: 26px; border-radius: 14px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  
+  .followup-fields { background-color: #f0fdf4; border: 1px dashed #86efac; padding: 16px; border-radius: 8px; margin-top: 12px; }
+  
+  .files-preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .file-item-card { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; }
+  .file-item-card img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; }
+  .file-item-card .remove-btn { color: var(--danger); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 4px; }
+
+  .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  @media print {
+    body * { visibility: hidden !important; }
+    #printReceiptArea, #printReceiptArea * { visibility: visible !important; }
+    #printReceiptArea { 
+      display: block !important;
+      position: absolute !important; 
+      left: 0 !important; 
+      top: 0 !important; 
+      width: 100% !important; 
+      padding: 20px !important; 
+      background: #fff !important;
+      color: #000 !important;
+    }
   }
-  #successMessage h3 { color: var(--success); font-size: 1.4rem; margin-bottom: 10px; }
-  #successMessage p { color: #475569; font-size: 0.95rem; line-height: 1.6; }
 </style>
 </head>
 <body>
 
-<div class="booking-container">
-  
-  <div id="bookingFormSection">
-    <div class="clinic-header">
-      <h2>🏥 حجز موعد بالعيادة</h2>
-      <p>املأ البيانات أدناه وسيتواصل معك فريق العيادة لتأكيد الموعد</p>
+<div class="container">
+  <!-- Header Branding with Clickable Logo to Home -->
+  <header>
+    <a href="index.html" class="brand-logo" title="الرجوع للبوابة الرئيسية (Home)">
+      <div class="logo-box">
+        <img src="Logo.png" alt="Logo" onerror="this.src='logo.png'; this.onerror=null;">
+      </div>
+      <div class="header-text">
+        <h1>د. بهاء شكري - Dr. Bahaa Shoukry</h1>
+        <p>نظام إدارة حجوزات العيادات</p>
+      </div>
+    </a>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button class="btn btn-warning" onclick="toggleOnlineRequestsModal()">🌐 طلبات الحجز الخارجية (<span id="onlineReqBadgeCount">0</span>)</button>
+      <button class="btn btn-secondary" onclick="toggleClinicManager()">⚙️ إدارة الفروع والعيادات واللوكيشن</button>
+    </div>
+  </header>
+
+  <!-- Dynamic Clinics & Branches Manager Panel -->
+  <div id="clinicManagerBox" class="card" style="display: none; background: #fff7ed; border-color: #ffedd5;">
+    <div class="card-title" style="color: #c2410c; border-color: #ffedd5;">⚙️ إدارة الفروع، العناوين، وروابط اللوكيشن (تظهر للمريض عند الحجز)</div>
+    
+    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
+      <h4 id="branchFormTitle" style="margin-bottom: 10px; color: #c2410c;">➕ إضافة فرع عيادة جديد:</h4>
+      <input type="hidden" id="editingBranchId" value="">
+
+      <div class="grid">
+        <div class="field"><label>اسم الفرع / العيادة</label><input type="text" id="mgrBranchName" placeholder="مثال: فرع حلوان"></div>
+        <div class="field"><label>أيام العمل</label><input type="text" id="mgrWorkingDays" placeholder="الأحد والثلاثاء والخميس"></div>
+        <div class="field"><label>ساعات العمل</label><input type="text" id="mgrWorkingHours" placeholder="من 6 لـ 9 مساءً"></div>
+        <div class="field" style="grid-column: span 2;"><label>العنوان بالتفصيل</label><input type="text" id="mgrAddress" placeholder="شارع كذا، عمارة كذا..."></div>
+        <div class="field" style="grid-column: span 2;"><label>رابط اللوكيشن (Google Maps URL)</label><input type="text" id="mgrMapLink" placeholder="https://maps.google.com/?q=..."></div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 5px;">
+        <button class="btn btn-success" style="flex: 1;" id="saveBranchBtn" onclick="saveBranchToSupabase()">💾 حفظ الفرع في القاعدة أونلاين</button>
+        <button class="btn btn-secondary" id="cancelBranchEditBtn" style="display: none;" onclick="resetBranchForm()">إلغاء</button>
+      </div>
     </div>
 
-    <div class="field">
-      <label>اختر فرع العيادة:</label>
-      <select id="branchSelect" onchange="showBranchDetails()">
-        <option value="">⏳ جاري تحميل العيادات والفروع...</option>
-      </select>
+    <div style="margin-top: 12px;">
+      <label style="font-weight: bold; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 8px;">الفروع المسجلة حالياً (مع أزرار التعديل والحذف):</label>
+      <div id="clinicsTagsContainer">
+        <!-- Filled by JS -->
+      </div>
     </div>
-
-    <!-- كارت تفاصيل الفرع (العنوان والمواعيد) -->
-    <div id="branchInfoBox" class="branch-info-box">
-      📍 <span id="lblAddress">...</span><br>
-      ⏰ <span id="lblHours">...</span><br>
-      🗺️ <a id="lblMap" href="#" target="_blank" style="color:var(--primary); font-weight:bold; display:inline-block; margin-top:4px;">فتح اللوكيشن على خريطة جوجل ↗</a>
-    </div>
-
-    <div class="field">
-      <label>📅 تاريخ الحجز المطلوب:</label>
-      <input type="date" id="bookingDate">
-    </div>
-
-    <div class="field">
-      <label>اسم المريض بالكامل (يجب إدخال الاسم الثلاثي على الأقل):</label>
-      <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي">
-    </div>
-
-    <div class="field">
-      <label>رقم الهاتف الأساسي (يجب أن يكون عليه واتساب لإرسال التأكيد أو الإلغاء):</label>
-      <input type="tel" id="patientPhone1" placeholder="01xxxxxxxxx">
-    </div>
-
-    <div class="field">
-      <label>رقم هاتف إضافي (اختياري):</label>
-      <input type="tel" id="patientPhone2" placeholder="01xxxxxxxxx">
-    </div>
-
-    <div class="field">
-      <label>نوع الزيارة:</label>
-      <select id="visitType">
-        <option value="كشف جديد">كشف جديد</option>
-        <option value="استشارة">استشارة / متابعة</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>ملاحظات إضافية (اختياري):</label>
-      <textarea id="patientNotes" rows="2" placeholder="اكتب أي تفاصيل أو أعراض..."></textarea>
-    </div>
-
-    <button class="btn-submit" onclick="submitOnlineBooking()">📅 إرسال طلب الحجز الآن</button>
   </div>
 
-  <div id="successMessage">
-    <h3>✅ تم إرسال طلبك بنجاح!</h3>
-    <p>شكراً لك. طلب حجزك الآن في <b>قيد المراجعة</b> من قِبل طاقم العيادة، وسنرسل لك تفاصيل التأكيد أو الاعتذار عبر رقم الواتساب المسجل في أقرب وقت.</p>
-    <button class="btn-submit" style="background: var(--primary); margin-top: 20px;" onclick="location.reload()">تسجيل حجز جديد</button>
+  <!-- Control Panel (Clinic & Date Selector) -->
+  <div class="card" style="background: #f0f9ff; border-color: #bae6fd;">
+    <div class="card-title" style="color: #0369a1; border-color: #bae6fd; display:flex; justify-content:space-between; align-items:center;">
+      <span>📍 تحديد العيادة والتاريخ لتصفية الحجوزات</span>
+      <button onclick="fetchAppointmentsFromSupabase()" class="btn btn-secondary" style="padding:4px 12px; font-size:0.8rem;">🔄 تحديث البيانات</button>
+    </div>
+    <div class="grid" style="margin-bottom: 0;">
+      <div class="field">
+        <label>اختر العيادة:</label>
+        <select id="activeClinic" onchange="filterAppointments()">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div class="field">
+        <label>تاريخ الحجز واليومية:</label>
+        <input type="date" id="activeDate" onchange="filterAppointments()">
+      </div>
+    </div>
   </div>
 
+  <!-- Add New Appointment Form -->
+  <div class="card">
+    <div class="card-title" id="bookingFormTitle">➕ إضافة حجز مريض جديد للعيادة والتاريخ المحددين أعلاه</div>
+    <input type="hidden" id="editingDbId" value="-1">
+    
+    <div class="grid">
+      <div class="field">
+        <label>نوع الزيارة / الحجز</label>
+        <select id="bookingVisitType" onchange="toggleBookingVisitFields()">
+          <option value="كشف جديد">كشف جديد</option>
+          <option value="متابعة">متابعة (بعد العملية)</option>
+          <option value="أخرى">أخرى (تحديد بيان)</option>
+        </select>
+      </div>
+
+      <div class="field" id="bookingPatientCodeBox" style="display: none;">
+        <label style="color: var(--primary); font-weight: bold;">🔑 كود المريض (اكتب الكود لسحب البيانات):</label>
+        <input type="text" id="bookingPatientCode" placeholder="مثال: C-101" onchange="fetchPatientDetailsFromPreOp('booking')">
+      </div>
+
+      <div class="field">
+        <label>اسم المريض بالكامل</label>
+        <input type="text" id="patientName" placeholder="مثال: أحمد محمود">
+      </div>
+      <div class="field">
+        <label>رقم التليفون 1</label>
+        <input type="tel" id="patientPhone1" placeholder="01xxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>رقم التليفون 2 (اختياري)</label>
+        <input type="tel" id="patientPhone2" placeholder="01xxxxxxxxx">
+      </div>
+
+      <div class="field" id="bookingSurgeryDateBox" style="display: none;">
+        <label style="color: var(--success);">📅 تاريخ إجراء العملية</label>
+        <input type="date" id="bookingSurgeryDate">
+      </div>
+
+      <div class="field" id="otherTypeBox" style="display: none;">
+        <label style="color: var(--secondary);">حدد نوع الزيارة الأُخرى</label>
+        <input type="text" id="otherTypeDetail" placeholder="مثال: جلسة غيار، استشارة...">
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 8px;">
+      <button class="btn" id="saveBookingBtn" style="flex: 1;" onclick="addOrUpdateAppointment()">💾 حفظ الحجز أونلاين</button>
+      <button class="btn btn-secondary" id="cancelBookingEditBtn" style="display: none;" onclick="resetBookingForm()">إلغاء التعديل</button>
+    </div>
+  </div>
+
+  <!-- Appointments Table -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+      <div class="card-title" style="margin-bottom: 0; border: none; padding: 0;">📋 قائمة الحجوزات (<span id="currentFilterLabel" style="color: var(--accent-gold);"></span>)</div>
+      <div class="field" style="width: 250px;">
+        <input type="text" id="tableSearchInput" placeholder="🔍 فلترة جدول اليوم..." onkeyup="searchInCurrentTable()">
+      </div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>م</th>
+          <th>اسم المريض</th>
+          <th>أرقام التليفون</th>
+          <th>التاريخ والفرع</th>
+          <th>نوع الزيارة / الكود</th>
+          <th>مبلغ التحصيل</th>
+          <th>حالة الحضور</th>
+          <th>الإجراءات والمرفقات</th>
+        </tr>
+      </thead>
+      <tbody id="appointmentsTable">
+        <tr><td colspan="8" style="text-align:center; color:#0e7490; font-weight:bold;">⏳ جاري جلب الحجوزات أونلاين...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Global Patient Search & Archive Section -->
+  <div class="card" style="background: #f8fafc; border: 2px dashed #cbd5e1;">
+    <div class="card-title">🔍 البحث الشامل والأرشيف (البحث في جميع العيادات والتواريخ السابقة)</div>
+    <div class="grid">
+      <div class="field" style="grid-column: span 2;">
+        <label>ابحث باسم المريض أو رقم التليفون أو الكود لاستدعاء سجل الكشوفات والملاحظات والمستندات وتعديلها:</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="globalSearchInput" placeholder="اكتب الاسم، التليفون، أو الكود هنا..." style="flex: 1;" onkeypress="if(event.key==='Enter') globalSearchArchive()">
+          <button class="btn btn-secondary" style="width: auto; padding: 10px 20px;" onclick="globalSearchArchive()">🔍 بحث في الأرشيف</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="archiveResultsBox" style="display: none; margin-top: 16px; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <h4 style="color: var(--primary); margin: 0;">📂 نتائج البحث والأرشيف الطبي:</h4>
+        <button class="btn btn-success" style="padding: 6px 14px; font-size: 0.85rem;" onclick="printSearchResultsTable()">🖨️ طباعة نتائج البحث كشف كامل</button>
+      </div>
+      
+      <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 6px; overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم المريض</th>
+              <th>كود المريض</th>
+              <th>التليفون</th>
+              <th>الفرع والتاريخ</th>
+              <th>نوع الزيارة</th>
+              <th>تاريخ العملية</th>
+              <th>الرسوم</th>
+              <th>الملاحظات الطبية</th>
+              <th>المرفقات والروشتة</th>
+              <th>الإجراءات والطباعة</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTableBody">
+            <!-- Results populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Online Booking Requests (طلبات حجز المرضى الخارجية) -->
+<div id="onlineRequestsModal" class="modal">
+  <div class="modal-content" style="max-width: 980px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+      <h3 style="color: var(--primary);">🌐 طلبات الحجز الواردة من المرضى أونلاين (قيد الانتظار)</h3>
+      <button onclick="toggleOnlineRequestsModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
+    </div>
+    
+    <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>اسم المريض</th>
+            <th>رقم الهاتف</th>
+            <th>الفرع المطلوب</th>
+            <th>تاريخ الحجز المطلوب</th>
+            <th>نوع الزيارة والملاحظات</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="onlineRequestsTableBody">
+          <tr><td colspan="6" style="text-align:center; padding:15px;">⏳ جاري جلب الطلبات الواردة...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Check-in & Comprehensive Edit Modal -->
+<div id="checkInModal" class="modal">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+      <h3 id="modalTitle" style="color: var(--primary);">✏️ تعديل وتأكيد بيانات الزيارة بالكامل</h3>
+      <button onclick="closeModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>نوع الزيارة</label>
+        <select id="modalVisitType" onchange="toggleModalFollowUpFields()">
+          <option value="كشف جديد">كشف جديد</option>
+          <option value="متابعة">متابعة (بعد العملية)</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+      <div class="field" id="modalPatientCodeBox" style="display: none;">
+        <label style="color: var(--primary); font-weight: bold;">🔑 كود المريض (Customer Code):</label>
+        <input type="text" id="modalPatientCode" placeholder="مثال: C-101" onchange="fetchPatientDetailsFromPreOp('modal')">
+      </div>
+      <div class="field">
+        <label>اسم المريض</label>
+        <input type="text" id="modalPatientName">
+      </div>
+      <div class="field">
+        <label>رقم التليفون 1</label>
+        <input type="tel" id="modalPhone1">
+      </div>
+      <div class="field">
+        <label>رقم التليفون 2</label>
+        <input type="tel" id="modalPhone2">
+      </div>
+    </div>
+
+    <!-- Financial Section -->
+    <div style="background-color: #fefce8; border: 1px solid #fef08a; padding: 14px; border-radius: 8px; margin-bottom: 16px;">
+      <div style="font-weight: bold; color: var(--accent-gold); margin-bottom: 8px;">💵 تحصيل رسوم الزيارة / الكشف:</div>
+      <div class="grid" style="margin-bottom: 0;">
+        <div class="field">
+          <label>سعر الكشف / الزيارة (ج.م)</label>
+          <input type="number" id="visitFee" placeholder="مثال: 500" value="0">
+        </div>
+        <div class="field" style="justify-content: center;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 18px;">
+            <input type="checkbox" id="isFreeVisit" onchange="handleFreeCheckbox()" style="width: 18px; height: 18px;">
+            <span style="font-weight: bold; color: var(--success);">كشف مجاني / بدون رسوم 🎁</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Follow Up Specific Fields (Surgery Details & Date) -->
+    <div id="modalFollowUpFields" class="followup-fields" style="display: none;">
+      <div style="font-weight: bold; margin-bottom: 10px; color: var(--success);">🩺 تفاصيل وتاريخ العملية (خاص بالمتابعة):</div>
+      <div class="grid" style="margin-bottom: 0;">
+        <div class="field">
+          <label>📅 تاريخ إجراء العملية</label>
+          <input type="date" id="modalSurgeryDate">
+        </div>
+        <div class="field">
+          <label>نوع العملية</label>
+          <input type="text" id="modalSurgeryType" placeholder="تكميم، تحويل مسار...">
+        </div>
+        <div class="field">
+          <label>المستشفى</label>
+          <input type="text" id="modalHospitalName" placeholder="اسم المستشفى">
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Field -->
+    <div class="field" style="margin-top: 14px;">
+      <label style="font-weight: bold; color: var(--primary);">📝 ملاحظات الكشف / تقرير المتابعة بالعيادة (يتم ترحيلها تلقائياً لشيت Post-Op):</label>
+      <textarea id="visitNotes" rows="3" placeholder="اكتب التشخيص، الشكوى، التعليمات الطبية، أو خطة العلاج هنا..."></textarea>
+    </div>
+
+    <!-- 📎 Multi-format File Attachments (Images, PDF, Word, etc.) -->
+    <div class="field" style="margin-top: 16px; background: #f8fafc; border: 1px dashed var(--border); padding: 14px; border-radius: 8px;">
+      <label style="font-weight: bold; color: var(--primary);">📎 إرفاق ملفات ومستندات الكشف (صور 🖼️ / ملفات PDF 📄 / ملفات Word 📝 / أي ملفات أخرى):</label>
+      <input type="file" id="visitPaperFiles" accept="image/*,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple onchange="handleVisitFiles(this)" style="background: white; margin-top: 4px;">
+      <div id="modalFilesPreview" class="files-preview-container"></div>
+    </div>
+
+    <!-- أزرار التحكم في المودال (حفظ التعديلات فقط vs تأكيد الحضور والكشف) -->
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="btn btn-warning" style="flex: 1;" onclick="saveCheckInEditsOnly()">💾 حفظ التعديلات فقط</button>
+      <button class="btn btn-success" style="flex: 1;" onclick="confirmCheckIn()">✅ تأكيد حضور وكشف أونلاين</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Attachments Viewer (مستعرض الصور والمستندات) -->
+<div id="attachmentsViewerModal" class="modal">
+  <div class="modal-content" style="max-width: 750px; text-align: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+      <h3 id="attachmentsViewerTitle" style="color: var(--primary);">📂 مستندات وروشتات الكشف</h3>
+      <button onclick="closeAttachmentsViewer()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
+    </div>
+    <div id="attachmentsGalleryBox" style="display: flex; flex-direction: column; gap: 15px; max-height: 70vh; overflow-y: auto; padding: 10px;"></div>
+  </div>
+</div>
+
+<!-- Printable Area Template -->
+<div id="printReceiptArea" style="display: none;">
+  <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+    <div style="width:75px; height:75px; border-radius:50%; overflow:hidden; border:1px solid #000;">
+      <img src="Logo.png" alt="Logo" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='logo.png'; this.onerror=null;">
+    </div>
+    <div>
+      <h2 style="margin:0;">🩺 د. بهاء شكري - Dr. Bahaa Shoukry</h2>
+      <p style="margin:2px 0;">استشاري جراحات السمنة والمناظير</p>
+      <p id="pDate" style="margin-top: 5px; font-size: 0.9rem;"></p>
+    </div>
+  </div>
+  <div id="pContent"></div>
 </div>
 
 <script>
+  // 🔗 Supabase Configuration
   const SUPABASE_URL = "https://gfheumheyrmyrczvlwdh.supabase.co";
   const SUPABASE_KEY = "sb_publishable_SFmYaaTF08Zt2gKPmk7UUw_siKQ_tDt";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let branchesData = [];
+  document.getElementById('activeDate').valueAsDate = new Date();
+
+  let availableClinics = [];
+  let clinicsDbData = [];
+  let allAppointments = [];
+  let onlineBookingRequests = [];
+  let currentCheckInId = null;
+  let currentUploadedFiles = [];
+  let lastSearchResults = [];
 
   window.onload = function() {
-    document.getElementById('bookingDate').valueAsDate = new Date();
-    loadBranchesForBooking();
+    fetchClinicBranches();
+    fetchAppointmentsFromSupabase();
+    fetchOnlineBookingRequests();
+    toggleBookingVisitFields();
   };
 
-  async function loadBranchesForBooking() {
-    let select = document.getElementById('branchSelect');
-    const { data, error } = await supabaseClient.from('clinic_branches').select('*');
-    
-    if (!error && data && data.length > 0) {
-      branchesData = data;
-      select.innerHTML = '<option value="">-- اضغط لاختيار الفرع المناسب --</option>';
-      data.forEach(b => {
-        select.innerHTML += `<option value="${b.branch_name}">${b.branch_name}</option>`;
-      });
-    } else {
-      select.innerHTML = '<option value="">⚠️ لا توجد فروع متاحة حالياً</option>';
+  async function fetchClinicBranches() {
+    const { data, error } = await supabaseClient.from('clinic_branches').select('*').order('id', { ascending: true });
+    if (!error && data) {
+      clinicsDbData = data;
+      availableClinics = data.map(b => b.branch_name);
+      if (availableClinics.length === 0) {
+        availableClinics = ["حلوان"];
+      }
+      renderClinicsOptions();
+      filterAppointments();
     }
   }
 
-  function showBranchDetails() {
-    let selectedName = document.getElementById('branchSelect').value;
-    let box = document.getElementById('branchInfoBox');
+  async function fetchAppointmentsFromSupabase() {
+    let tbody = document.getElementById('appointmentsTable');
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#0e7490; font-weight:bold;">⏳ جاري جلب الحجوزات أونلاين...</td></tr>';
+
+    const { data, error } = await supabaseClient.from('appointments').select('*').order('id', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#dc2626;">⚠️ تعذر الجلب، برجاء التأكد من الاتصال.</td></tr>';
+    } else {
+      allAppointments = data.map(item => ({
+        dbId: item.id,
+        ...item.data
+      }));
+      filterAppointments();
+    }
+  }
+
+  // تعديل الاستعلام لجلب كافة الطلبات التي لم تُحذف بعد (لتظل ظاهرة أمامك حتى بعد التأكيد أو الرفض)
+  async function fetchOnlineBookingRequests() {
+    const { data, error } = await supabaseClient.from('patient_online_bookings').select('*').neq('status', 'deleted').order('id', { ascending: false });
+    if (!error && data) {
+      onlineBookingRequests = data;
+      document.getElementById('onlineReqBadgeCount').innerText = data.filter(r => r.status === 'pending').length;
+      renderOnlineRequestsTable();
+    }
+  }
+
+  function renderOnlineRequestsTable() {
+    let tbody = document.getElementById('onlineRequestsTableBody');
+    tbody.innerHTML = '';
+
+    if (onlineBookingRequests.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">لا توجد طلبات حجز واردة حالياً</td></tr>';
+      return;
+    }
+
+    onlineBookingRequests.forEach(req => {
+      let bInfo = clinicsDbData.find(b => b.branch_name === req.branch_name) || { address: 'العنوان غير مدخل', map_link: '#' };
+      
+      let rawPhone = req.phone.split('/')[0].trim();
+      let cleanPhone = rawPhone.startsWith('0') ? '2' + rawPhone : rawPhone;
+      let reqDate = req.booking_date || new Date().toISOString().split('T')[0];
+      
+      let msgConfirm = `أهلاً بك يا ${req.patient_name}\nنود إعلامك بأنه تم تأكيد حجزك في فرع (${req.branch_name}) بتاريخ (${reqDate}) لدى د. بهاء شكري.\n📍 العنوان: ${bInfo.address}\n🗺️ اللوكيشن: ${bInfo.map_link}\nنتشرف بزيارتك!`;
+      let whatsAppConfirmUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgConfirm)}`;
+
+      let msgReject = `أهلاً بك يا ${req.patient_name}\nنعتذر لك بشدة، لتعذر تأكيد الحجز في فرع (${req.branch_name}) بتاريخ (${reqDate}) نظراً لاكتمال العدد المسموح به أو لأن التاريخ غير صحيح/غير متاح.\nنتطلع لرؤيتك في المواعيد القادمة، شكراً لتفهمك.`;
+      let whatsAppRejectUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgReject)}`;
+
+      // شارة توضيحية لحالة الطلب لتبقى ظاهرة بوضوح (قيد الانتظار، مؤكد، أو مرفوض)
+      let statusLabel = '';
+      if (req.status === 'confirmed') statusLabel = '<span class="status-badge status-done">✅ مؤكد</span>';
+      else if (req.status === 'rejected') statusLabel = '<span class="status-badge status-cancelled">❌ مرفوض</span>';
+      else statusLabel = '<span class="status-badge status-pending">⏳ قيد الانتظار</span>';
+
+      tbody.innerHTML += `
+        <tr>
+          <td><b>${req.patient_name}</b><br>${statusLabel}</td>
+          <td>${req.phone}</td>
+          <td><b style="color:var(--primary);">${req.branch_name}</b></td>
+          <td><span class="visit-badge" style="background:#fef3c7; color:#b45309;">📅 ${reqDate}</span></td>
+          <td><span class="visit-badge">${req.visit_type}</span><br><small>${req.notes || ''}</small></td>
+          <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-success" style="padding:5px 10px; font-size:0.8rem;" onclick="confirmAndOpenWhatsApp(${req.id}, '${req.branch_name}', '${req.patient_name}', '${req.phone}', '${req.visit_type}', '${reqDate}', '${whatsAppConfirmUrl}')">✅ تأكيد ونقل</button>
+              <a href="${whatsAppConfirmUrl}" target="_blank" class="btn btn-whatsapp" style="padding:5px 10px; font-size:0.8rem;">💬 واتساب تأكيد</a>
+              <a href="${whatsAppRejectUrl}" target="_blank" class="btn btn-warning" style="padding:5px 10px; font-size:0.8rem; background:#ca8a04;" title="إرسال رسالة اعتذار لاكتمال العدد أو خطأ التاريخ">💬 اعتذار واتساب</a>
+              <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="rejectAndOpenWhatsApp(${req.id}, '${whatsAppRejectUrl}')">❌ رفض</button>
+              <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; background:#64748b;" onclick="deleteOnlineRequest(${req.id})">🗑️ حذف</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  // عند التأكيد نحدث الحالة إلى confirmed لتظل ظاهرة في القائمة ولا تختفي
+  async function confirmAndOpenWhatsApp(reqId, branchName, patientName, phone, visitType, bookingDate, whatsAppUrl) {
+    let targetDate = bookingDate || new Date().toISOString().split('T')[0];
     
-    if (!selectedName) {
+    let payload = { name: patientName, phone1: phone, phone2: "", clinic: branchName, date: targetDate, visitType: visitType, surgeryDate: "", patientCode: "", status: "pending", files: [], paperImg: "", notes: "تم الحجز أونلاين بمعرفة المريض", surgeryType: "", hospitalName: "", fee: 0, isFree: false };
+    
+    const { error: insErr } = await supabaseClient.from('appointments').insert([{ data: payload }]);
+    if (insErr) return alert("⚠️ تعذر ترحيل الحجز للجدول الرسمي.");
+
+    await supabaseClient.from('patient_online_bookings').update({ status: 'confirmed' }).eq('id', reqId);
+
+    window.open(whatsAppUrl, '_blank');
+    alert(`✅ تم تأكيد حجز المريض (${patientName}) ونقله لتاريخ (${targetDate}) في جدول عيادة (${branchName}) بنجاح!`);
+
+    fetchOnlineBookingRequests();
+    fetchAppointmentsFromSupabase();
+  }
+
+  // عند الرفض نحدث الحالة إلى rejected لتظل ظاهرة أمامك أيضاً
+  async function rejectAndOpenWhatsApp(reqId, whatsAppRejectUrl) {
+    if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
+      await supabaseClient.from('patient_online_bookings').update({ status: 'rejected' }).eq('id', reqId);
+      window.open(whatsAppRejectUrl, '_blank');
+      fetchOnlineBookingRequests();
+    }
+  }
+
+  // الحذف النهائي من القاعدة (لن تختفي البيانات إلا عند الضغط هنا فقط)
+  async function deleteOnlineRequest(reqId) {
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا الطلب نهائياً من القائمة؟")) {
+      const { error } = await supabaseClient.from('patient_online_bookings').delete().eq('id', reqId);
+      if (!error) {
+        alert("✅ تم حذف الطلب بنجاح.");
+        fetchOnlineBookingRequests();
+      } else {
+        alert("⚠️ تعذر حذف الطلب، يرجى المحاولة لاحقاً.");
+      }
+    }
+  }
+
+  async function deleteAppointmentPermanent(dbId) {
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا الحجز نهائياً من قاعدة البيانات؟")) {
+      const { error } = await supabaseClient.from('appointments').delete().eq('id', dbId);
+      if (!error) {
+        alert("✅ تم حذف الحجز نهائياً بنجاح.");
+        fetchAppointmentsFromSupabase();
+      } else {
+        alert("⚠️ تعذر حذف الحجز، يرجى المحاولة لاحقاً.");
+      }
+    }
+  }
+
+  function toggleOnlineRequestsModal() {
+    let modal = document.getElementById('onlineRequestsModal');
+    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    if (modal.style.display === 'flex') {
+      fetchOnlineBookingRequests();
+    }
+  }
+
+  async function fetchPatientDetailsFromPreOp(target) {
+    let codeInputId = (target === 'booking') ? 'bookingPatientCode' : 'modalPatientCode';
+    let code = document.getElementById(codeInputId).value.trim();
+    if (!code) return;
+
+    const { data, error } = await supabaseClient.from('preop_records').select('*');
+    if (!error && data) {
+      let matched = data.find(item => item.data && item.data.patientCode && item.data.patientCode.trim().toLowerCase() === code.toLowerCase());
+      if (matched && matched.data) {
+        let p = matched.data;
+        if (target === 'booking') {
+          document.getElementById('patientName').value = p.patientName || '';
+          if (p.opDate) document.getElementById('bookingSurgeryDate').value = p.opDate;
+        } else {
+          document.getElementById('modalPatientName').value = p.patientName || '';
+          document.getElementById('modalSurgeryType').value = p.operation || '';
+          document.getElementById('modalHospitalName').value = p.hospital || '';
+          if (p.opDate) document.getElementById('modalSurgeryDate').value = p.opDate;
+        }
+      }
+    }
+  }
+
+  function toggleClinicManager() {
+    let box = document.getElementById('clinicManagerBox');
+    box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+  }
+
+  function renderClinicsOptions() {
+    let select = document.getElementById('activeClinic');
+    let tagsContainer = document.getElementById('clinicsTagsContainer');
+    
+    let currentVal = select.value;
+    select.innerHTML = '';
+    tagsContainer.innerHTML = '';
+
+    clinicsDbData.forEach(b => {
+      select.innerHTML += `<option value="${b.branch_name}">${b.branch_name}</option>`;
+      tagsContainer.innerHTML += `
+        <div class="branch-card-item">
+          <div>
+            <b style="color:var(--primary); font-size:1rem;">${b.branch_name}</b><br>
+            <small style="color:#64748b;">📍 ${b.address || 'بدون عنوان'} | ⏰ ${b.working_days || ''} (${b.working_hours || ''})</small>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-warning" style="padding:4px 10px; font-size:0.8rem;" onclick='editBranch(${JSON.stringify(b)})'>✏️ تعديل</button>
+            <button class="btn btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="removeClinicBranch(${b.id}, '${b.branch_name}')">🗑️ حذف</button>
+          </div>
+        </div>
+      `;
+    });
+
+    if(availableClinics.includes(currentVal)) {
+      select.value = currentVal;
+    }
+  }
+
+  function editBranch(b) {
+    document.getElementById('editingBranchId').value = b.id;
+    document.getElementById('mgrBranchName').value = b.branch_name || '';
+    document.getElementById('mgrWorkingDays').value = b.working_days || '';
+    document.getElementById('mgrWorkingHours').value = b.working_hours || '';
+    document.getElementById('mgrAddress').value = b.address || '';
+    document.getElementById('mgrMapLink').value = b.map_link || '';
+
+    document.getElementById('branchFormTitle').innerText = `✏️ تعديل بيانات فرع: ${b.branch_name}`;
+    document.getElementById('saveBranchBtn').innerText = '💾 حفظ التعديلات';
+    document.getElementById('cancelBranchEditBtn').style.display = 'inline-block';
+  }
+
+  function resetBranchForm() {
+    document.getElementById('editingBranchId').value = '';
+    document.getElementById('mgrBranchName').value = '';
+    document.getElementById('mgrWorkingDays').value = '';
+    document.getElementById('mgrWorkingHours').value = '';
+    document.getElementById('mgrAddress').value = '';
+    document.getElementById('mgrMapLink').value = '';
+
+    document.getElementById('branchFormTitle').innerText = '➕ إضافة فرع عيادة جديد:';
+    document.getElementById('saveBranchBtn').innerText = '💾 حفظ الفرع في القاعدة أونلاين';
+    document.getElementById('cancelBranchEditBtn').style.display = 'none';
+  }
+
+  async function saveBranchToSupabase() {
+    let editId = document.getElementById('editingBranchId').value;
+    let branch_name = document.getElementById('mgrBranchName').value.trim();
+    let working_days = document.getElementById('mgrWorkingDays').value.trim();
+    let working_hours = document.getElementById('mgrWorkingHours').value.trim();
+    let address = document.getElementById('mgrAddress').value.trim();
+    let map_link = document.getElementById('mgrMapLink').value.trim();
+
+    if(!branch_name || !address) return alert("يرجى كتابة اسم الفرع وعنوانه بالتفصيل");
+
+    let payload = { branch_name, working_days, working_hours, address, map_link };
+
+    if (editId) {
+      const { error } = await supabaseClient.from('clinic_branches').update(payload).eq('id', editId);
+      if(!error) {
+        alert(`✅ تم تحديث بيانات الفرع بنجاح!`);
+        resetBranchForm();
+        fetchClinicBranches();
+      } else {
+        alert("⚠️ تعذر التعديل.");
+      }
+    } else {
+      const { error } = await supabaseClient.from('clinic_branches').insert([payload]);
+      if(!error) {
+        alert(`✅ تم حفظ فرع (${branch_name}) بنجاح وتحديثه للمرضى أونلاين!`);
+        resetBranchForm();
+        fetchClinicBranches();
+      } else {
+        alert("⚠️ تعذر الحفظ، تأكد من الاتصال.");
+      }
+    }
+  }
+
+  async function removeClinicBranch(id, name) {
+    if(clinicsDbData.length <= 1) return alert("يجب إبقاء فرع واحد على الأقل في السيستم!");
+    if(confirm(`هل أنت متأكد من حذف فرع (${name}) نهائياً؟`)) {
+      const { error } = await supabaseClient.from('clinic_branches').delete().eq('id', id);
+      if(!error) {
+        fetchClinicBranches();
+      }
+    }
+  }
+
+  function toggleBookingVisitFields() {
+    let type = document.getElementById('bookingVisitType').value;
+    document.getElementById('otherTypeBox').style.display = (type === 'أخرى') ? 'flex' : 'none';
+    document.getElementById('bookingSurgeryDateBox').style.display = (type === 'متابعة') ? 'flex' : 'none';
+    document.getElementById('bookingPatientCodeBox').style.display = (type === 'متابعة' || type === 'أخرى') ? 'flex' : 'none';
+  }
+
+  function filterAppointments() {
+    let selectedClinic = document.getElementById('activeClinic').value;
+    let selectedDate = document.getElementById('activeDate').value;
+
+    document.getElementById('currentFilterLabel').innerText = `${selectedClinic || ''} - بتاريخ: ${selectedDate || ''}`;
+
+    let filtered = allAppointments.filter(app => app.clinic === selectedClinic && app.date === selectedDate);
+    renderTable(filtered);
+  }
+
+  function renderTable(dataList) {
+    let tbody = document.getElementById('appointmentsTable');
+    tbody.innerHTML = '';
+    
+    if(!dataList || dataList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:20px;">لا توجد حجوزات مسجلة لهذه العيادة في هذا التاريخ</td></tr>';
+      return;
+    }
+
+    dataList.forEach((app, index) => {
+      let statusHtml = '<span class="status-badge status-pending">⏳ لم يحضر</span>';
+      if(app.status === 'done') statusHtml = '<span class="status-badge status-done">✅ تم الحضور والكشف</span>';
+      if(app.status === 'cancelled') statusHtml = '<span class="status-badge status-cancelled">❌ ملغى</span>';
+      
+      let phonesHtml = app.phone1 + (app.phone2 ? `<br><small style="color:#64748b;">${app.phone2}</small>` : '');
+
+      let feeHtml = '-';
+      if(app.status === 'done') {
+        feeHtml = app.isFree 
+          ? '<span class="free-badge">مجاني 🎁</span>' 
+          : `<span class="price-badge">${parseFloat(app.fee || 0).toLocaleString()} ج.م</span>`;
+      }
+
+      let visitTypeDisplay = app.visitType;
+      if(app.patientCode) {
+        visitTypeDisplay += `<br><small style="color:var(--primary); font-weight:bold;">كود: ${app.patientCode}</small>`;
+      }
+      if(app.visitType === 'متابعة' && app.surgeryDate) {
+        visitTypeDisplay += `<br><small style="color:#15803d; font-weight:bold;">العملية: ${app.surgeryDate}</small>`;
+      }
+
+      let filesCount = (app.files && app.files.length > 0) ? app.files.length : (app.paperImg ? 1 : 0);
+      let attachBtn = filesCount > 0 
+        ? `<button class="btn btn-secondary" style="padding: 5px 10px; font-size:0.8rem;" onclick="viewAttachments(${app.dbId})">📂 المرفقات (${filesCount})</button>` 
+        : '';
+
+      let actionBtns = `
+        <div class="action-btns">
+          ${app.status === 'pending' ? `<button class="btn btn-success" style="padding: 5px 10px; font-size:0.8rem;" onclick="openCheckInModal(${app.dbId})">✅ حضور وكشف</button>` : ''}
+          ${attachBtn}
+          <button class="btn btn-warning" style="padding: 5px 10px; font-size:0.8rem;" onclick="openCheckInModal(${app.dbId})">✏️ تعديل الزيارة</button>
+          ${app.status !== 'cancelled' ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="cancelAppointment(${app.dbId})">❌ إلغاء</button>` : `<button class="btn btn-secondary" style="padding: 5px 10px; font-size:0.8rem;" onclick="restoreAppointment(${app.dbId})">🔄 تفعيل</button>`}
+          <button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem; background:#64748b;" onclick="deleteAppointmentPermanent(${app.dbId})">🗑️ حذف</button>
+        </div>
+      `;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td><b>${app.name}</b></td>
+          <td>${phonesHtml}</td>
+          <td>${app.clinic}<br><small style="color:#64748b;">${app.date}</small></td>
+          <td><span class="visit-badge">${visitTypeDisplay}</span></td>
+          <td>${feeHtml}</td>
+          <td>${statusHtml}</td>
+          <td>${actionBtns}</td>
+        </tr>
+      `;
+    });
+  }
+
+  async function addOrUpdateAppointment() {
+    let editDbId = parseInt(document.getElementById('editingDbId').value);
+
+    let name = document.getElementById('patientName').value.trim();
+    let phone1 = document.getElementById('patientPhone1').value.trim();
+    let phone2 = document.getElementById('patientPhone2').value.trim();
+    let clinic = document.getElementById('activeClinic').value;
+    let date = document.getElementById('activeDate').value;
+    
+    let visitSelect = document.getElementById('bookingVisitType').value;
+    let visitType = visitSelect;
+
+    if(visitSelect === 'أخرى') {
+      let detail = document.getElementById('otherTypeDetail').value.trim();
+      visitType = detail ? `أخرى (${detail})` : 'أخرى';
+    }
+
+    let surgeryDate = (visitSelect === 'متابعة') ? document.getElementById('bookingSurgeryDate').value : '';
+    let patientCode = (visitSelect === 'متابعة' || visitSelect === 'أخرى') ? document.getElementById('bookingPatientCode').value.trim() : '';
+
+    if(!name || !phone1) return alert("برجاء إدخال الاسم ورقم التليفون الرئيسي على الأقل");
+
+    if(editDbId > 0) {
+      let existingApp = allAppointments.find(a => a.dbId === editDbId);
+      let updatedPayload = { ...existingApp, name, phone1, phone2, clinic, date, visitType, surgeryDate, patientCode };
+      delete updatedPayload.dbId;
+
+      const { error } = await supabaseClient.from('appointments').update({ data: updatedPayload }).eq('id', editDbId);
+      if(!error) {
+        alert("✅ تم تعديل بيانات الحجز أونلاين بنجاح!");
+        resetBookingForm();
+        fetchAppointmentsFromSupabase();
+      }
+    } else {
+      let payload = { name, phone1, phone2, clinic, date, visitType, surgeryDate, patientCode, status: "pending", files: [], paperImg: "", notes: "", surgeryType: "", hospitalName: "", fee: 0, isFree: false };
+      const { error } = await supabaseClient.from('appointments').insert([{ data: payload }]);
+      if(!error) {
+        alert("✅ تم حفظ الحجز أونلاين بنجاح!");
+        resetBookingForm();
+        fetchAppointmentsFromSupabase();
+      }
+    }
+  }
+
+  function resetBookingForm() {
+    document.getElementById('editingDbId').value = "-1";
+    document.getElementById('bookingFormTitle').innerText = "➕ إضافة حجز مريض جديد للعيادة والتاريخ المحددين أعلاه";
+    document.getElementById('saveBookingBtn').innerText = "💾 حفظ الحجز أونلاين";
+    document.getElementById('cancelBookingEditBtn').style.display = "none";
+    
+    document.getElementById('patientName').value = '';
+    document.getElementById('patientPhone1').value = '';
+    document.getElementById('patientPhone2').value = '';
+    document.getElementById('bookingVisitType').value = 'كشف جديد';
+    document.getElementById('bookingPatientCode').value = '';
+    document.getElementById('otherTypeDetail').value = '';
+    document.getElementById('bookingSurgeryDate').value = '';
+    toggleBookingVisitFields();
+  }
+
+  async function cancelAppointment(dbId) {
+    if(confirm("هل أنت متأكد من إلغاء هذا الحجز؟")) {
+      let app = allAppointments.find(a => a.dbId === dbId);
+      if(app) {
+        let updatedPayload = { ...app };
+        delete updatedPayload.dbId;
+        updatedPayload.status = 'cancelled';
+
+        const { error } = await supabaseClient.from('appointments').update({ data: updatedPayload }).eq('id', dbId);
+        if(!error) {
+          fetchAppointmentsFromSupabase();
+        }
+      }
+    }
+  }
+
+  async function restoreAppointment(dbId) {
+    let app = allAppointments.find(a => a.dbId === dbId);
+    if(app) {
+      let updatedPayload = { ...app };
+      delete updatedPayload.dbId;
+      updatedPayload.status = 'pending';
+
+      const { error } = await supabaseClient.from('appointments').update({ data: updatedPayload }).eq('id', dbId);
+      if(!error) {
+        fetchAppointmentsFromSupabase();
+      }
+    }
+  }
+
+  function searchInCurrentTable() {
+    let query = document.getElementById('tableSearchInput').value.trim().toLowerCase();
+    let selectedClinic = document.getElementById('activeClinic').value;
+    let selectedDate = document.getElementById('activeDate').value;
+
+    let baseList = allAppointments.filter(app => app.clinic === selectedClinic && app.date === selectedDate);
+
+    if(!query) {
+      renderTable(baseList);
+      return;
+    }
+
+    let searchResult = baseList.filter(app => 
+      app.name.toLowerCase().includes(query) ||
+      (app.patientCode && app.patientCode.toLowerCase().includes(query)) ||
+      app.phone1.includes(query) ||
+      (app.phone2 && app.phone2.includes(query))
+    );
+
+    renderTable(searchResult);
+  }
+
+  function globalSearchArchive() {
+    let query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
+    let box = document.getElementById('archiveResultsBox');
+    let tbody = document.getElementById('archiveTableBody');
+
+    if(!query) {
+      alert("يرجى كتابة اسم المريض، رقم التليفون، أو الكود للبحث في الأرشيف");
       box.style.display = 'none';
       return;
     }
 
-    let branch = branchesData.find(b => b.branch_name === selectedName);
-    if (branch) {
-      document.getElementById('lblAddress').innerText = branch.address || 'العنوان غير مدخل';
-      document.getElementById('lblHours').innerText = `${branch.working_days || ''} (${branch.working_hours || ''})`;
-      
-      let mapA = document.getElementById('lblMap');
-      if (branch.map_link) {
-        mapA.href = branch.map_link;
-        mapA.style.display = 'inline-block';
-      } else {
-        mapA.style.display = 'none';
-      }
-      box.style.display = 'block';
+    lastSearchResults = allAppointments.filter(app => 
+      app.name.toLowerCase().includes(query) ||
+      (app.patientCode && app.patientCode.toLowerCase().includes(query)) ||
+      app.phone1.includes(query) ||
+      (app.phone2 && app.phone2.includes(query))
+    );
+
+    tbody.innerHTML = '';
+    if(lastSearchResults.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#dc2626; padding:15px;">لا توجد أي نتائج مطابقة لهذا المريض في الأرشيف</td></tr>';
+    } else {
+      lastSearchResults.forEach(app => {
+        let filesCount = (app.files && app.files.length > 0) ? app.files.length : (app.paperImg ? 1 : 0);
+        let attachBtn = filesCount > 0 
+          ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size:0.75rem;" onclick="viewAttachments(${app.dbId})">📂 المرفقات (${filesCount})</button>` 
+          : '<span style="color:#94a3b8; font-size:0.8rem;">لا توجد</span>';
+
+        let feeText = app.isFree ? '<span class="free-badge">مجاني 🎁</span>' : (app.fee ? `${parseFloat(app.fee).toLocaleString()} ج.م` : '-');
+
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${app.name}</b></td>
+            <td><b style="color:var(--primary);">${app.patientCode || '-'}</b></td>
+            <td>${app.phone1}</td>
+            <td>${app.clinic}<br><small style="color:#64748b;">${app.date}</small></td>
+            <td><span class="visit-badge">${app.visitType}</span></td>
+            <td>${app.surgeryDate || '-'}</td>
+            <td>${feeText}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis;" title="${app.notes || ''}">${app.notes || '-'}</td>
+            <td>${attachBtn}</td>
+            <td>
+              <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <button class="btn btn-info" style="padding: 4px 8px; font-size:0.75rem;" onclick="printSinglePatientFile('${app.patientCode || ''}', '${app.name}')">🖨️ طباعة ملف الحالة</button>
+                <button class="btn btn-warning" style="padding: 4px 8px; font-size:0.75rem;" onclick="openCheckInModal(${app.dbId})">✏️ تعديل</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    box.style.display = 'block';
+  }
+
+  function printSearchResultsTable() {
+    if (!lastSearchResults || lastSearchResults.length === 0) {
+      alert("⚠️ لا توجد نتائج بحث للطباعة!");
+      return;
+    }
+
+    let query = document.getElementById('globalSearchInput').value.trim();
+    let totalFees = 0;
+    let rowsHTML = "";
+
+    lastSearchResults.forEach((app, idx) => {
+      let feeVal = (!app.isFree && app.status === 'done') ? (parseFloat(app.fee) || 0) : 0;
+      totalFees += feeVal;
+
+      let feeDisplay = app.isFree ? 'مجاني 🎁' : (app.status === 'done' ? `${feeVal.toLocaleString()} ج.م` : 'غير محصل');
+      let statusDisplay = app.status === 'done' ? '✅ تم الكشف' : (app.status === 'cancelled' ? '❌ ملغى' : '⏳ معلق');
+
+      rowsHTML += `
+        <tr>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${idx + 1}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;"><b>${app.patientCode || '-'}</b></td>
+          <td style="border:1px solid #000; padding:6px;"><b>${app.name}</b></td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${app.phone1}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${app.clinic}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${app.date}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${app.visitType}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${statusDisplay}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:left;">${feeDisplay}</td>
+          <td style="border:1px solid #000; padding:6px; font-size:0.85rem;">${app.notes || '-'}</td>
+        </tr>
+      `;
+    });
+
+    let printHTML = `
+      <div style="font-size:0.95rem; line-height:1.6; color:#000;">
+        <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #000; padding-bottom:8px;">
+          <h3 style="margin:0; font-size:1.3rem; color:#0f4c5c;">📊 كشف نتائج الأرشيف والبحث عن: (${query})</h3>
+          <p style="margin:4px 0 0 0; font-size:0.88rem;">إجمالي الزيارات بالتقرير: <b>${lastSearchResults.length} زيارة</b> | تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</p>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:15px; font-size:0.88rem;">
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th style="border:1px solid #000; padding:6px;">#</th>
+              <th style="border:1px solid #000; padding:6px;">الكود</th>
+              <th style="border:1px solid #000; padding:6px;">اسم المريض</th>
+              <th style="border:1px solid #000; padding:6px;">الهاتف</th>
+              <th style="border:1px solid #000; padding:6px;">العيادة</th>
+              <th style="border:1px solid #000; padding:6px;">التاريخ</th>
+              <th style="border:1px solid #000; padding:6px;">الزيارة</th>
+              <th style="border:1px solid #000; padding:6px;">الحالة</th>
+              <th style="border:1px solid #000; padding:6px;">الرسوم</th>
+              <th style="border:1px solid #000; padding:6px;">الملاحظات والتشخيص</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+          <tfoot>
+            <tr style="background:#e2e8f0; font-weight:bold;">
+              <td colspan="8" style="border:1px solid #000; padding:8px; text-align:center;">إجمالي الرسوم المحصلة بالكشف:</td>
+              <td colspan="2" style="border:1px solid #000; padding:8px; text-align:left; color:green;">${totalFees.toLocaleString()} ج.م</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="margin-top:30px; display:flex; justify-content:space-between; padding-top:15px; border-top:1px dashed #000; font-size:0.88rem;">
+          <div><b>توقيع إدارة العيادات:</b> ..........................</div>
+          <div><b>يعتمد (د. بهاء شكري):</b> ..........................</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('pDate').innerText = 'تاريخ التقرير: ' + new Date().toLocaleDateString('ar-EG');
+    document.getElementById('pContent').innerHTML = printHTML;
+
+    document.getElementById('printReceiptArea').style.display = 'block';
+    window.print();
+    document.getElementById('printReceiptArea').style.display = 'none';
+  }
+
+  async function printSinglePatientFile(patientCode, patientName) {
+    let patientVisits = allAppointments.filter(app => (
+      (patientCode && app.patientCode && app.patientCode.trim().toLowerCase() === patientCode.trim().toLowerCase()) ||
+      (app.name && app.name.trim().toLowerCase() === patientName.trim().toLowerCase())
+    ));
+
+    if (patientVisits.length === 0) {
+      alert("⚠️ لا توجد بيانات مسجلة لهذا المريض!");
+      return;
+    }
+
+    patientVisits.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let mainInfo = patientVisits[0];
+    let surgeryDate = patientVisits.find(v => v.surgeryDate)?.surgeryDate || '-';
+    let surgeryType = patientVisits.find(v => v.surgeryType)?.surgeryType || '-';
+    let hospitalName = patientVisits.find(v => v.hospitalName)?.hospitalName || '-';
+
+    let visitsRows = "";
+    patientVisits.forEach((v, idx) => {
+      let statusText = (v.status === 'done') ? '✅ تم الحضور' : (v.status === 'cancelled' ? '❌ ملغى' : '⏳ معلق');
+      let feeText = v.isFree ? 'مجاني 🎁' : (v.fee ? `${parseFloat(v.fee).toLocaleString()} ج.م` : '-');
+
+      visitsRows += `
+        <tr>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${idx + 1}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;"><b>${v.date || '-'}</b></td>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${v.clinic || '-'}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${v.visitType || '-'}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${feeText}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${statusText}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px; font-size:0.85rem;">${v.notes || '-'}</td>
+        </tr>
+      `;
+    });
+
+    let printHTML = `
+      <div style="font-size:1rem; line-height:1.7; color:#000;">
+        <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #000; padding-bottom:8px;">
+          <h3 style="margin:0; font-size:1.35rem; color:#0f4c5c;">📋 تقرير وسجل زيارات المريض بالعيادات</h3>
+          <p style="margin:2px 0; font-size:0.88rem;">كود المريض: <b>${patientCode || '-'}</b> | تاريخ استخراج الملف: ${new Date().toLocaleDateString('ar-EG')}</p>
+        </div>
+
+        <h4 style="margin-bottom:6px; background:#f1f5f9; padding:6px; border-radius:4px; color:#0f4c5c;">👤 أولاً: البيانات الأساسية للمريض:</h4>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:15px; font-size:0.92rem;">
+          <tr>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>اسم المريض:</b> ${patientName}</td>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>كود المريض:</b> ${patientCode || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>رقم التليفون 1:</b> ${mainInfo.phone1}</td>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>رقم التليفون 2:</b> ${mainInfo.phone2 || '-'}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>نوع الجراحة:</b> ${surgeryType}</td>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>تاريخ الجراحة:</b> ${surgeryDate} (${hospitalName})</td>
+          </tr>
+        </table>
+
+        <h4 style="margin-top:14px; margin-bottom:6px; background:#f0f9ff; padding:6px; border-radius:4px; color:#0369a1;">🏥 ثانياً: سجل حضور وزيارات العيادات والملاحظات الطبية بالتفصيل:</h4>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:15px; font-size:0.88rem;">
+          <thead>
+            <tr style="background:#e0f2fe;">
+              <th style="border:1px solid #cbd5e1; padding:6px;">#</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">تاريخ الزيارة</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">الفرع</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">نوع الزيارة</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">الرسوم</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">حالة الحضور</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">الملاحظات والتشخيص بالعيادة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${visitsRows}
+          </tbody>
+        </table>
+
+        <div style="margin-top:35px; display:flex; justify-content:space-between; padding-top:15px; border-top:1px dashed #000; font-size:0.9rem;">
+          <div><b>توقيع إدارة العيادة:</b> ..........................</div>
+          <div><b>استشاري جراحات السمنة (د. بهاء شكري):</b> ..........................</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('pDate').innerText = 'تاريخ التقرير: ' + new Date().toLocaleDateString('ar-EG');
+    document.getElementById('pContent').innerHTML = printHTML;
+
+    document.getElementById('printReceiptArea').style.display = 'block';
+    window.print();
+    document.getElementById('printReceiptArea').style.display = 'none';
+  }
+
+  function handleFreeCheckbox() {
+    let isFree = document.getElementById('isFreeVisit').checked;
+    let feeInput = document.getElementById('visitFee');
+    if(isFree) {
+      feeInput.value = 0;
+      feeInput.disabled = true;
+    } else {
+      feeInput.disabled = false;
     }
   }
 
-  async function submitOnlineBooking() {
-    let branch_name = document.getElementById('branchSelect').value;
-    let booking_date = document.getElementById('bookingDate').value;
-    let patient_name = document.getElementById('patientName').value.trim();
-    let phone1 = document.getElementById('patientPhone1').value.trim();
-    let phone2 = document.getElementById('patientPhone2').value.trim();
-    let visit_type = document.getElementById('visitType').value;
-    let notes = document.getElementById('patientNotes').value.trim();
-
-    if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
-    if (!booking_date) return alert('⚠️ يرجى تحديد تاريخ الحجز.');
-    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض.');
-
-    // التحقق البرمجي من أن الاسم ثلاثي على الأقل (3 كلمات)
-    let nameParts = patient_name.split(/\s+/);
-    if (nameParts.length < 3) {
-      return alert('⚠️ عذراً، يجب إدخال الاسم ثلاثياً على الأقل (مثال: أحمد محمد علي).');
+  function handleVisitFiles(input) {
+    if (input.files) {
+      Array.from(input.files).forEach(file => {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+          currentUploadedFiles.push({
+            name: file.name,
+            type: file.type,
+            data: e.target.result
+          });
+          renderModalFilesPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      input.value = '';
     }
+  }
 
-    if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم هاتف واتساب أساسي صحيح للتواصل.');
+  function renderModalFilesPreview() {
+    let container = document.getElementById('modalFilesPreview');
+    container.innerHTML = '';
+    
+    currentUploadedFiles.forEach((file, index) => {
+      let isImg = file.type && file.type.startsWith('image/');
+      let icon = isImg ? '🖼️' : (file.name.endsWith('.pdf') ? '📄' : '📝');
+      
+      let card = document.createElement('div');
+      card.className = 'file-item-card';
+      
+      let previewContent = isImg 
+        ? `<img src="${file.data}" alt="${file.name}">` 
+        : `<span>${icon}</span>`;
 
-    let fullPhones = phone1 + (phone2 ? ` / ${phone2}` : '');
+      card.innerHTML = `
+        ${previewContent}
+        <span style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${file.name}">${file.name}</span>
+        <button type="button" class="remove-btn" onclick="removeUploadedFile(${index})" title="حذف الملف">✖</button>
+      `;
+      container.appendChild(card);
+    });
+  }
 
-    const { error } = await supabaseClient.from('patient_online_bookings').insert([{
-      branch_name,
-      booking_date,
-      patient_name,
-      phone: fullPhones,
-      visit_type,
-      notes,
-      status: 'pending'
-    }]);
+  function removeUploadedFile(index) {
+    currentUploadedFiles.splice(index, 1);
+    renderModalFilesPreview();
+  }
 
-    if (!error) {
-      document.getElementById('bookingFormSection').style.display = 'none';
-      document.getElementById('successMessage').style.display = 'block';
+  function openCheckInModal(dbId) {
+    currentCheckInId = dbId;
+    let app = allAppointments.find(a => a.dbId === dbId);
+    if(!app) return;
+
+    if (app.files && Array.isArray(app.files)) {
+      currentUploadedFiles = [...app.files];
+    } else if (app.paperImg) {
+      currentUploadedFiles = [{
+        name: 'روشتة / ورقة كشف',
+        type: 'image/png',
+        data: app.paperImg
+      }];
     } else {
-      alert('⚠️ حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
+      currentUploadedFiles = [];
     }
+    renderModalFilesPreview();
+
+    document.getElementById('modalPatientName').value = app.name || '';
+    document.getElementById('modalPatientCode').value = app.patientCode || '';
+    document.getElementById('modalPhone1').value = app.phone1 || '';
+    document.getElementById('modalPhone2').value = app.phone2 || '';
+    
+    if(app.visitType.includes('متابعة')) {
+      document.getElementById('modalVisitType').value = 'متابعة';
+    } else if(app.visitType.includes('أخرى')) {
+      document.getElementById('modalVisitType').value = 'أخرى';
+    } else {
+      document.getElementById('modalVisitType').value = 'كشف جديد';
+    }
+
+    document.getElementById('modalSurgeryType').value = app.surgeryType || '';
+    document.getElementById('modalSurgeryDate').value = app.surgeryDate || '';
+    document.getElementById('modalHospitalName').value = app.hospitalName || '';
+    document.getElementById('visitNotes').value = app.notes || '';
+
+    document.getElementById('visitFee').value = app.fee || 0;
+    document.getElementById('isFreeVisit').checked = !!app.isFree;
+    handleFreeCheckbox();
+
+    toggleModalFollowUpFields();
+    document.getElementById('checkInModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('checkInModal').style.display = 'none';
+  }
+
+  function toggleModalFollowUpFields() {
+    let type = document.getElementById('modalVisitType').value;
+    let isFollowUp = (type === 'متابعة');
+    let isOther = (type === 'أخرى');
+    
+    document.getElementById('modalFollowUpFields').style.display = isFollowUp ? 'block' : 'none';
+    document.getElementById('modalPatientCodeBox').style.display = (isFollowUp || isOther) ? 'flex' : 'none';
+  }
+
+  async function syncFollowUpToPostOp(patientCode, patientName, clinicName, visitDate, notes, files) {
+    if (!patientCode) return;
+
+    let payload = {
+      code: patientCode,
+      name: patientName,
+      docSurg: 'د. بهاء شكري',
+      docNutrition: '',
+      followUpDate: visitDate,
+      attendanceStatus: 'حضر بالعيادة',
+      visitMilestone: `زيارة عيادة (${clinicName})`,
+      doctorNotes: `[ملاحظات كشف العيادة - فرع ${clinicName}]: ${notes || 'تم الحضور للكشف الدوري'}`,
+      noteDocs: files || [],
+      recordedBy: 'نظام حجوزات العيادة'
+    };
+
+    await supabaseClient.from('postop_records').insert([{ data: payload }]);
+  }
+
+  async function saveCheckInEditsOnly() {
+    let app = allAppointments.find(a => a.dbId === currentCheckInId);
+    if(app) {
+      let updatedPayload = { ...app };
+      delete updatedPayload.dbId;
+
+      updatedPayload.name = document.getElementById('modalPatientName').value.trim();
+      updatedPayload.patientCode = document.getElementById('modalPatientCode').value.trim();
+      updatedPayload.phone1 = document.getElementById('modalPhone1').value.trim();
+      updatedPayload.phone2 = document.getElementById('modalPhone2').value.trim();
+      updatedPayload.visitType = document.getElementById('modalVisitType').value;
+      updatedPayload.notes = document.getElementById('visitNotes').value;
+      updatedPayload.surgeryType = document.getElementById('modalSurgeryType').value;
+      updatedPayload.surgeryDate = document.getElementById('modalSurgeryDate').value;
+      updatedPayload.hospitalName = document.getElementById('modalHospitalName').value;
+      
+      updatedPayload.isFree = document.getElementById('isFreeVisit').checked;
+      updatedPayload.fee = updatedPayload.isFree ? 0 : (parseFloat(document.getElementById('visitFee').value) || 0);
+
+      updatedPayload.files = currentUploadedFiles;
+      let firstImg = currentUploadedFiles.find(f => f.type && f.type.startsWith('image/'));
+      updatedPayload.paperImg = firstImg ? firstImg.data : "";
+
+      const { error } = await supabaseClient.from('appointments').update({ data: updatedPayload }).eq('id', currentCheckInId);
+      
+      if(!error) {
+        alert("✅ تم حفظ التعديلات بنجاح!");
+        closeModal();
+        fetchAppointmentsFromSupabase();
+      }
+    }
+  }
+
+  async function confirmCheckIn() {
+    let app = allAppointments.find(a => a.dbId === currentCheckInId);
+    if(app) {
+      let updatedPayload = { ...app };
+      delete updatedPayload.dbId;
+
+      updatedPayload.status = 'done';
+      updatedPayload.name = document.getElementById('modalPatientName').value.trim();
+      updatedPayload.patientCode = document.getElementById('modalPatientCode').value.trim();
+      updatedPayload.phone1 = document.getElementById('modalPhone1').value.trim();
+      updatedPayload.phone2 = document.getElementById('modalPhone2').value.trim();
+      updatedPayload.visitType = document.getElementById('modalVisitType').value;
+      updatedPayload.notes = document.getElementById('visitNotes').value;
+      updatedPayload.surgeryType = document.getElementById('modalSurgeryType').value;
+      updatedPayload.surgeryDate = document.getElementById('modalSurgeryDate').value;
+      updatedPayload.hospitalName = document.getElementById('modalHospitalName').value;
+      
+      updatedPayload.isFree = document.getElementById('isFreeVisit').checked;
+      updatedPayload.fee = updatedPayload.isFree ? 0 : (parseFloat(document.getElementById('visitFee').value) || 0);
+
+      updatedPayload.files = currentUploadedFiles;
+      let firstImg = currentUploadedFiles.find(f => f.type && f.type.startsWith('image/'));
+      updatedPayload.paperImg = firstImg ? firstImg.data : "";
+
+      const { error } = await supabaseClient.from('appointments').update({ data: updatedPayload }).eq('id', currentCheckInId);
+      
+      if(!error) {
+        if (updatedPayload.visitType === 'متابعة' && updatedPayload.patientCode) {
+          await syncFollowUpToPostOp(updatedPayload.patientCode, updatedPayload.name, updatedPayload.clinic, updatedPayload.date, updatedPayload.notes, currentUploadedFiles);
+        }
+
+        alert("✅ تم تأكيد حضور الكشف وحفظ المرفقات بنجاح!");
+        closeModal();
+        fetchAppointmentsFromSupabase();
+        
+        if(document.getElementById('globalSearchInput').value.trim()) {
+          globalSearchArchive();
+        }
+      }
+    }
+  }
+
+  function viewAttachments(dbId) {
+    let app = allAppointments.find(a => a.dbId === dbId);
+    if(!app) return;
+
+    let filesList = [];
+    if (app.files && Array.isArray(app.files) && app.files.length > 0) {
+      filesList = app.files;
+    } else if (app.paperImg) {
+      filesList = [{ name: 'ورقة الكشف / الروشتة', type: 'image/png', data: app.paperImg }];
+    }
+
+    if(filesList.length === 0) return alert("لا توجد ملفات مرفقة لهذه الزيارة");
+
+    document.getElementById('attachmentsViewerTitle').innerText = `📂 مستندات كشف: ${app.name} (${app.date})`;
+    let gallery = document.getElementById('attachmentsGalleryBox');
+    gallery.innerHTML = '';
+
+    filesList.forEach((file, i) => {
+      let isImg = file.type && file.type.startsWith('image/');
+      if (isImg) {
+        gallery.innerHTML += `
+          <div style="border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; background: #f8fafc;">
+            <p style="margin-bottom:6px; font-weight:bold; color:var(--primary);">🖼️ ${file.name || 'صورة #' + (i+1)}</p>
+            <img src="${file.data}" style="max-width:100%; max-height:420px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+            <br>
+            <a href="${file.data}" download="${file.name || 'prescription_' + (i+1) + '.png'}" class="btn btn-secondary" style="display:inline-block; margin-top:8px; padding:5px 14px; font-size:0.82rem; text-decoration:none;">⬇️ تحميل الصورة</a>
+          </div>
+        `;
+      } else {
+        let icon = (file.name && file.name.endsWith('.pdf')) ? '📄' : '📝';
+        let ext = file.name ? file.name.split('.').pop().toUpperCase() : 'DOC';
+        gallery.innerHTML += `
+          <div style="border: 1px solid #cbd5e1; padding: 16px; border-radius: 8px; background: #f8fafc; text-align: right;">
+            <h4 style="color:var(--primary); margin-bottom:6px;">${icon} ${file.name}</h4>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">ملف مستند مرفق بزيارة العيادة</p>
+            <a href="${file.data}" download="${file.name}" class="btn btn-info" style="display:inline-block; text-decoration:none; padding:6px 14px; font-size:0.85rem;">⬇️ تحميل / فتح المستند (${ext})</a>
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById('attachmentsViewerModal').style.display = 'flex';
+  }
+
+  function closeAttachmentsViewer() {
+    document.getElementById('attachmentsViewerModal').style.display = 'none';
   }
 </script>
 </body>
