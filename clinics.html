@@ -100,8 +100,7 @@
   .price-badge { background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; }
   .free-badge { background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; }
 
-  .clinic-tag { display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: 1px solid #bae6fd; }
-  .clinic-tag button { background: transparent; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 1rem; }
+  .branch-card-item { background: #fff; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
 
   /* Modal Styles */
   .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); justify-content: center; align-items: center; padding: 20px; z-index: 1000; }
@@ -157,7 +156,9 @@
     <div class="card-title" style="color: #c2410c; border-color: #ffedd5;">⚙️ إدارة الفروع، العناوين، وروابط اللوكيشن (تظهر للمريض عند الحجز)</div>
     
     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
-      <h4 style="margin-bottom: 10px; color: #c2410c;">➕ إضافة أو تعديل فرع عيادة جديد:</h4>
+      <h4 id="branchFormTitle" style="margin-bottom: 10px; color: #c2410c;">➕ إضافة فرع عيادة جديد:</h4>
+      <input type="hidden" id="editingBranchId" value="">
+
       <div class="grid">
         <div class="field"><label>اسم الفرع / العيادة</label><input type="text" id="mgrBranchName" placeholder="مثال: فرع حلوان"></div>
         <div class="field"><label>أيام العمل</label><input type="text" id="mgrWorkingDays" placeholder="الأحد والثلاثاء والخميس"></div>
@@ -165,12 +166,15 @@
         <div class="field" style="grid-column: span 2;"><label>العنوان بالتفصيل</label><input type="text" id="mgrAddress" placeholder="شارع كذا، عمارة كذا..."></div>
         <div class="field" style="grid-column: span 2;"><label>رابط اللوكيشن (Google Maps URL)</label><input type="text" id="mgrMapLink" placeholder="https://maps.google.com/?q=..."></div>
       </div>
-      <button class="btn btn-success" style="width: 100%; margin-top: 5px;" onclick="saveBranchToSupabase()">💾 حفظ الفرع في القاعدة أونلاين</button>
+      <div style="display: flex; gap: 10px; margin-top: 5px;">
+        <button class="btn btn-success" style="flex: 1;" id="saveBranchBtn" onclick="saveBranchToSupabase()">💾 حفظ الفرع في القاعدة أونلاين</button>
+        <button class="btn btn-secondary" id="cancelBranchEditBtn" style="display: none;" onclick="resetBranchForm()">إلغاء</button>
+      </div>
     </div>
 
     <div style="margin-top: 12px;">
-      <label style="font-weight: bold; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 8px;">الفروع المسجلة حالياً:</label>
-      <div id="clinicsTagsContainer" style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <label style="font-weight: bold; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 8px;">الفروع المسجلة حالياً (مع أزرار التعديل والحذف):</label>
+      <div id="clinicsTagsContainer">
         <!-- Filled by JS -->
       </div>
     </div>
@@ -488,7 +492,7 @@
   };
 
   async function fetchClinicBranches() {
-    const { data, error } = await supabaseClient.from('clinic_branches').select('*');
+    const { data, error } = await supabaseClient.from('clinic_branches').select('*').order('id', { ascending: true });
     if (!error && data) {
       clinicsDbData = data;
       availableClinics = data.map(b => b.branch_name);
@@ -565,13 +569,11 @@
   async function confirmOnlineRequest(reqId, branchName, patientName, phone, visitType) {
     let todayDate = new Date().toISOString().split('T')[0];
     
-    // 1. إضافة الحجز لجدول الحجوزات الرسمي
     let payload = { name: patientName, phone1: phone, phone2: "", clinic: branchName, date: todayDate, visitType: visitType, surgeryDate: "", patientCode: "", status: "pending", files: [], paperImg: "", notes: "تم الحجز أونلاين بمعرفة المريض", surgeryType: "", hospitalName: "", fee: 0, isFree: false };
     
     const { error: insErr } = await supabaseClient.from('appointments').insert([{ data: payload }]);
     if (insErr) return alert("⚠️ تعذر ترحيل الحجز للجدول الرسمي.");
 
-    // 2. تحديث حالة الطلب إلى confirmed
     await supabaseClient.from('patient_online_bookings').update({ status: 'confirmed' }).eq('id', reqId);
 
     alert(`✅ تم تأكيد حجز المريض (${patientName}) ونقله لجدول عيادة (${branchName}) بنجاح!`);
@@ -633,9 +635,15 @@
     clinicsDbData.forEach(b => {
       select.innerHTML += `<option value="${b.branch_name}">${b.branch_name}</option>`;
       tagsContainer.innerHTML += `
-        <div class="clinic-tag">
-          <span><b>${b.branch_name}</b> (${b.address || 'بدون عنوان'})</span>
-          <button onclick="removeClinicBranch(${b.id}, '${b.branch_name}')" title="حذف الفرع">✖</button>
+        <div class="branch-card-item">
+          <div>
+            <b style="color:var(--primary); font-size:1rem;">${b.branch_name}</b><br>
+            <small style="color:#64748b;">📍 ${b.address || 'بدون عنوان'} | ⏰ ${b.working_days || ''} (${b.working_hours || ''})</small>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-warning" style="padding:4px 10px; font-size:0.8rem;" onclick='editBranch(${JSON.stringify(b)})'>✏️ تعديل</button>
+            <button class="btn btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="removeClinicBranch(${b.id}, '${b.branch_name}')">🗑️ حذف</button>
+          </div>
         </div>
       `;
     });
@@ -645,7 +653,34 @@
     }
   }
 
+  function editBranch(b) {
+    document.getElementById('editingBranchId').value = b.id;
+    document.getElementById('mgrBranchName').value = b.branch_name || '';
+    document.getElementById('mgrWorkingDays').value = b.working_days || '';
+    document.getElementById('mgrWorkingHours').value = b.working_hours || '';
+    document.getElementById('mgrAddress').value = b.address || '';
+    document.getElementById('mgrMapLink').value = b.map_link || '';
+
+    document.getElementById('branchFormTitle').innerText = `✏️ تعديل بيانات فرع: ${b.branch_name}`;
+    document.getElementById('saveBranchBtn').innerText = '💾 حفظ التعديلات';
+    document.getElementById('cancelBranchEditBtn').style.display = 'inline-block';
+  }
+
+  function resetBranchForm() {
+    document.getElementById('editingBranchId').value = '';
+    document.getElementById('mgrBranchName').value = '';
+    document.getElementById('mgrWorkingDays').value = '';
+    document.getElementById('mgrWorkingHours').value = '';
+    document.getElementById('mgrAddress').value = '';
+    document.getElementById('mgrMapLink').value = '';
+
+    document.getElementById('branchFormTitle').innerText = '➕ إضافة فرع عيادة جديد:';
+    document.getElementById('saveBranchBtn').innerText = '💾 حفظ الفرع في القاعدة أونلاين';
+    document.getElementById('cancelBranchEditBtn').style.display = 'none';
+  }
+
   async function saveBranchToSupabase() {
+    let editId = document.getElementById('editingBranchId').value;
     let branch_name = document.getElementById('mgrBranchName').value.trim();
     let working_days = document.getElementById('mgrWorkingDays').value.trim();
     let working_hours = document.getElementById('mgrWorkingHours').value.trim();
@@ -654,17 +689,26 @@
 
     if(!branch_name || !address) return alert("يرجى كتابة اسم الفرع وعنوانه بالتفصيل");
 
-    const { error } = await supabaseClient.from('clinic_branches').insert([{ branch_name, working_days, working_hours, address, map_link }]);
-    if(!error) {
-      alert(`✅ تم حفظ فرع (${branch_name}) بنجاح وتحديثه للمرضى أونلاين!`);
-      document.getElementById('mgrBranchName').value = '';
-      document.getElementById('mgrWorkingDays').value = '';
-      document.getElementById('mgrWorkingHours').value = '';
-      document.getElementById('mgrAddress').value = '';
-      document.getElementById('mgrMapLink').value = '';
-      fetchClinicBranches();
+    let payload = { branch_name, working_days, working_hours, address, map_link };
+
+    if (editId) {
+      const { error } = await supabaseClient.from('clinic_branches').update(payload).eq('id', editId);
+      if(!error) {
+        alert(`✅ تم تحديث بيانات الفرع بنجاح!`);
+        resetBranchForm();
+        fetchClinicBranches();
+      } else {
+        alert("⚠️ تعذر التعديل.");
+      }
     } else {
-      alert("⚠️ تعذر الحفظ، تأكد من الاتصال.");
+      const { error } = await supabaseClient.from('clinic_branches').insert([payload]);
+      if(!error) {
+        alert(`✅ تم حفظ فرع (${branch_name}) بنجاح وتحديثه للمرضى أونلاين!`);
+        resetBranchForm();
+        fetchClinicBranches();
+      } else {
+        alert("⚠️ تعذر الحفظ، تأكد من الاتصال.");
+      }
     }
   }
 
