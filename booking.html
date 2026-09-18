@@ -76,7 +76,6 @@
   }
   .btn-submit:hover { background: #15803d; }
   
-  /* تفاصيل الفرع المختصرة تظهر عند الاختيار */
   .branch-info-box {
     background: #f1f5f9;
     padding: 12px;
@@ -118,17 +117,23 @@
     <!-- كارت تفاصيل الفرع (العنوان والمواعيد) -->
     <div id="branchInfoBox" class="branch-info-box">
       📍 <span id="lblAddress">...</span><br>
-      ⏰ <span id="lblHours">...</span>
+      ⏰ <span id="lblHours">...</span><br>
+      🗺️ <a id="lblMap" href="#" target="_blank" style="color:var(--primary); font-weight:bold; display:inline-block; margin-top:4px;">فتح اللوكيشن على خريطة جوجل ↗</a>
     </div>
 
     <div class="field">
-      <label>اسم المريض بالكامل:</label>
-      <input type="text" id="patientName" placeholder="اكتب اسمك الثلاثي...">
+      <label>اسم المريض بالكامل (الاسم الثلاثي على الأقل):</label>
+      <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي...">
     </div>
 
     <div class="field">
-      <label>رقم الهاتف (للتواصل وتأكيد الحجز):</label>
-      <input type="tel" id="patientPhone" placeholder="01xxxxxxxxx">
+      <label>رقم الهاتف الأساسي (للتواصل وتأكيد الحجز):</label>
+      <input type="tel" id="patientPhone1" placeholder="01xxxxxxxxx">
+    </div>
+
+    <div class="field">
+      <label>رقم هاتف إضافي (اختياري):</label>
+      <input type="tel" id="patientPhone2" placeholder="01xxxxxxxxx">
     </div>
 
     <div class="field">
@@ -157,7 +162,6 @@
 </div>
 
 <script>
-  // استخدم نفس مفاتيح Supabase الخاصة بمشروعك
   const SUPABASE_URL = "https://gfheumheyrmyrczvlwdh.supabase.co";
   const SUPABASE_KEY = "sb_publishable_SFmYaaTF08Zt2gKPmk7UUw_siKQ_tDt";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -194,8 +198,16 @@
 
     let branch = branchesData.find(b => b.branch_name === selectedName);
     if (branch) {
-      document.getElementById('lblAddress').innerText = branch.address;
-      document.getElementById('lblHours').innerText = `${branch.working_days} (${branch.working_hours})`;
+      document.getElementById('lblAddress').innerText = branch.address || 'العنوان غير مدخل';
+      document.getElementById('lblHours').innerText = `${branch.working_days || ''} (${branch.working_hours || ''})`;
+      
+      let mapA = document.getElementById('lblMap');
+      if (branch.map_link) {
+        mapA.href = branch.map_link;
+        mapA.style.display = 'inline-block';
+      } else {
+        mapA.style.display = 'none';
+      }
       box.style.display = 'block';
     }
   }
@@ -203,21 +215,32 @@
   async function submitOnlineBooking() {
     let branch_name = document.getElementById('branchSelect').value;
     let patient_name = document.getElementById('patientName').value.trim();
-    let phone = document.getElementById('patientPhone').value.trim();
+    let phone1 = document.getElementById('patientPhone1').value.trim();
+    let phone2 = document.getElementById('patientPhone2').value.trim();
     let visit_type = document.getElementById('visitType').value;
     let notes = document.getElementById('patientNotes').value.trim();
 
     if (!branch_name) return alert('⚠️ يرجى اختيار فرع العيادة.');
-    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض.');
-    if (!phone || phone.length < 10) return alert('⚠️ يرجى كتابة رقم هاتف صحيح للتواصل.');
+    if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض ثلاثياً.');
+    
+    // التحقق البسيط من أن الاسم يتكون من ثلاث كلمات على الأقل
+    let nameParts = patient_name.split(/\s+/);
+    if (nameParts.length < 3) {
+      return alert('⚠️ يرجى كتابة الاسم ثلاثياً على الأقل لتمييز المريض بدقة.');
+    }
+
+    if (!phone1 || phone1.length < 10) return alert('⚠️ يرجى كتابة رقم الهاتف الأساسي بشكل صحيح.');
+
+    // دمج الرقمين في حقل الهاتف ليظهروا معاً في لوحة التحكم لديك
+    let fullPhones = phone1 + (phone2 ? ` / ${phone2}` : '');
 
     const { error } = await supabaseClient.from('patient_online_bookings').insert([{
       branch_name,
       patient_name,
-      phone,
+      phone: fullPhones,
       visit_type,
       notes,
-      status: 'pending' // قيد الانتظار لحين تأكيد التيم
+      status: 'pending'
     }]);
 
     if (!error) {
