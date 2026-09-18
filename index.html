@@ -385,6 +385,7 @@ body {
       <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 12px;">
         <label style="font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">🔐 حدد الأقسام المسموح له بدخولها وصلاحياته:</label>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 0.9rem;">
+          <label style="color: var(--accent-gold); font-weight: bold; grid-column: span 2;"><input type="checkbox" id="perm_admin" onchange="toggleAdminPermissions(this)"> ⭐ مدير نظام كامل (كل الصلاحيات)</label>
           <label><input type="checkbox" id="perm_preop" checked> شيت العمليات (Pre-Op)</label>
           <label><input type="checkbox" id="perm_clinics" checked> حجوزات العيادات (Clinics)</label>
           <label><input type="checkbox" id="perm_postop" checked> متابعة ما بعد العملية (Post-Op)</label>
@@ -504,6 +505,16 @@ body {
     document.getElementById('authOverlay').style.display = 'flex';
   }
 
+  /* تحديد واختيار كل الصلاحيات عند اختيار مدير نظام */
+  function toggleAdminPermissions(checkbox) {
+    let isChecked = checkbox.checked;
+    document.getElementById('perm_preop').checked = isChecked;
+    document.getElementById('perm_clinics').checked = isChecked;
+    document.getElementById('perm_postop').checked = isChecked;
+    document.getElementById('perm_customers').checked = isChecked;
+    document.getElementById('perm_delete').checked = isChecked;
+  }
+
   /* تغيير كلمة السر */
   function openChangePasswordModal() {
     if (!currentUser) return;
@@ -621,20 +632,22 @@ body {
 
     if (!username || !password || !full_name) return alert('برجاء كتابة كل البيانات المطلوبة');
 
+    let isAdminFull = document.getElementById('perm_admin').checked;
+
     // تجميع الصلاحيات المحددة من مربعات الاختيار
     let permissions = {
-      preop: document.getElementById('perm_preop').checked,
-      clinics: document.getElementById('perm_clinics').checked,
-      postop: document.getElementById('perm_postop').checked,
-      customers: document.getElementById('perm_customers').checked,
-      canDelete: document.getElementById('perm_delete').checked
+      preop: isAdminFull || document.getElementById('perm_preop').checked,
+      clinics: isAdminFull || document.getElementById('perm_clinics').checked,
+      postop: isAdminFull || document.getElementById('perm_postop').checked,
+      customers: isAdminFull || document.getElementById('perm_customers').checked,
+      canDelete: isAdminFull || document.getElementById('perm_delete').checked
     };
 
     const { error } = await supabaseClient.from('system_users').insert([{
       username,
       password,
       full_name,
-      role: 'custom',
+      role: isAdminFull ? 'admin' : 'custom',
       permissions: permissions
     }]);
 
@@ -643,6 +656,7 @@ body {
       document.getElementById('newUsername').value = '';
       document.getElementById('newPassword').value = '';
       document.getElementById('newFullName').value = '';
+      document.getElementById('perm_admin').checked = false;
       fetchSystemUsersList();
     } else {
       alert('⚠️ تعذر الإضافة، قد يكون اسم المستخدم مكرراً.');
