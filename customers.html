@@ -413,7 +413,7 @@
 
 <!-- Modal Invoice Generator -->
 <div id="invoiceModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content" style="max-width: 900px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 16px;">
       <h3 id="invModalTitle" style="color: var(--primary);">🧾 إعداد فاتورة رسمية للعميل</h3>
       <button onclick="closeInvoiceModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
@@ -436,28 +436,26 @@
       </div>
     </div>
 
-    <h4 style="margin-bottom: 10px; color: var(--primary);">📋 بنود وتكاليف الفاتورة (قابلة للتعديل اليدوي ج.م):</h4>
-    <div class="grid">
-      <div class="field">
-        <label>1. أجر الطبيب والجراحة</label>
-        <input type="number" id="invSurgeonFee" placeholder="0" oninput="calculateInvoiceTotal()">
-      </div>
-      <div class="field">
-        <label>2. أجر التخدير</label>
-        <input type="number" id="invAnesthesiaFee" placeholder="0" oninput="calculateInvoiceTotal()">
-      </div>
-      <div class="field">
-        <label>3. فتح غرفة العمليات</label>
-        <input type="number" id="invOrFee" placeholder="0" oninput="calculateInvoiceTotal()">
-      </div>
-      <div class="field">
-        <label>4. الإقامة بالمستشفى</label>
-        <input type="number" id="invStayFee" placeholder="0" oninput="calculateInvoiceTotal()">
-      </div>
-      <div class="field">
-        <label>5. المستلزمات والأدوية</label>
-        <input type="number" id="invSuppliesFee" placeholder="0" oninput="calculateInvoiceTotal()">
-      </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <h4 style="color: var(--primary); margin:0;">📋 بنود وتكاليف الفاتورة (إضافة وحذف غير محدود):</h4>
+      <button class="btn" style="width: auto; padding: 6px 14px; font-size: 0.85rem; background: var(--success);" onclick="addInvoiceItemRow('', '')">➕ إضافة بند جديد</button>
+    </div>
+
+    <!-- جدول البنود الديناميكي -->
+    <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
+      <table style="margin-top: 0;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="padding: 8px; width: 50px; text-align: center;">#</th>
+            <th style="padding: 8px; text-align: right;">اسم أو وصف البند / الخدمة الطبية</th>
+            <th style="padding: 8px; width: 160px; text-align: left;">المبلغ (ج.م)</th>
+            <th style="padding: 8px; width: 70px; text-align: center;">حذف</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceItemsContainer">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
     </div>
 
     <!-- Invoice Summary Box -->
@@ -1037,6 +1035,7 @@
     document.getElementById('customerModal').style.display = 'none';
   }
 
+  // --- دوال الفاتورة الديناميكية (إضافة وحذف بنود بلا حدود) ---
   function openInvoiceModalByDbId(dbId) {
     currentActiveDbId = dbId;
     let c = customersList.find(item => item.dbId === dbId);
@@ -1045,11 +1044,15 @@
     document.getElementById('invModalTitle').innerText = `🧾 إعداد فاتورة رسمية للعميل: ${c.name} (${c.code})`;
     
     let total = c.total || 0;
-    document.getElementById('invSurgeonFee').value = Math.round(total * 0.50);
-    document.getElementById('invAnesthesiaFee').value = Math.round(total * 0.15);
-    document.getElementById('invOrFee').value = Math.round(total * 0.15);
-    document.getElementById('invStayFee').value = Math.round(total * 0.10);
-    document.getElementById('invSuppliesFee').value = Math.round(total * 0.10);
+    let container = document.getElementById('invoiceItemsContainer');
+    container.innerHTML = '';
+
+    // البنود الافتراضية مقسمة من الإجمالي
+    addInvoiceItemRow('أجر الطبيب والجراحة', Math.round(total * 0.50));
+    addInvoiceItemRow('أجر التخدير', Math.round(total * 0.15));
+    addInvoiceItemRow('فتح غرفة العمليات والتجهيز', Math.round(total * 0.15));
+    addInvoiceItemRow('الإقامة بالمستشفى والتمريض', Math.round(total * 0.10));
+    addInvoiceItemRow('المستلزمات والأدوية الطبية', Math.round(total * 0.10));
 
     handleTaxTypeChange();
     document.getElementById('invoiceModal').style.display = 'flex';
@@ -1057,6 +1060,47 @@
 
   function closeInvoiceModal() {
     document.getElementById('invoiceModal').style.display = 'none';
+  }
+
+  function addInvoiceItemRow(desc = '', amount = 0) {
+    let container = document.getElementById('invoiceItemsContainer');
+    let rowId = 'inv_row_' + Date.now() + Math.random().toString(36).substr(2, 4);
+
+    let tr = document.createElement('tr');
+    tr.id = rowId;
+    tr.innerHTML = `
+      <td style="padding: 6px; text-align: center; border-bottom: 1px solid var(--border);">🔢</td>
+      <td style="padding: 6px; border-bottom: 1px solid var(--border);">
+        <input type="text" class="inv-desc" value="${desc}" placeholder="اكتب اسم البند أو الخدمة..." style="width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; outline: none;">
+      </td>
+      <td style="padding: 6px; border-bottom: 1px solid var(--border);">
+        <input type="number" class="inv-amount" value="${amount}" placeholder="0" oninput="calculateInvoiceTotal()" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; outline: none;">
+      </td>
+      <td style="padding: 6px; text-align: center; border-bottom: 1px solid var(--border);">
+        <button type="button" onclick="removeInvoiceItemRow('${rowId}')" style="background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">✖</button>
+      </td>
+    `;
+    container.appendChild(tr);
+    reindexInvoiceRows();
+    calculateInvoiceTotal();
+  }
+
+  function removeInvoiceItemRow(rowId) {
+    let row = document.getElementById(rowId);
+    if (row) {
+      row.remove();
+      reindexInvoiceRows();
+      calculateInvoiceTotal();
+    }
+  }
+
+  function reindexInvoiceRows() {
+    let container = document.getElementById('invoiceItemsContainer');
+    let rows = container.querySelectorAll('tr');
+    rows.forEach((tr, index) => {
+      let numCell = tr.querySelector('td:first-child');
+      if (numCell) numCell.innerText = index + 1;
+    });
   }
 
   function handleTaxTypeChange() {
@@ -1074,15 +1118,13 @@
   }
 
   function calculateInvoiceTotal() {
-    let surgeon = parseFloat(document.getElementById('invSurgeonFee').value) || 0;
-    let anesthesia = parseFloat(document.getElementById('invAnesthesiaFee').value) || 0;
-    let or = parseFloat(document.getElementById('invOrFee').value) || 0;
-    let stay = parseFloat(document.getElementById('invStayFee').value) || 0;
-    let supplies = parseFloat(document.getElementById('invSuppliesFee').value) || 0;
+    let amountInputs = document.querySelectorAll('.inv-amount');
+    let subtotal = 0;
+    amountInputs.forEach(inp => {
+      subtotal += parseFloat(inp.value) || 0;
+    });
 
-    let subtotal = surgeon + anesthesia + or + stay + supplies;
     let taxRate = parseFloat(document.getElementById('invTaxRateInput').value) || 0;
-    
     let taxVal = (subtotal * taxRate) / 100;
     let grandTotal = subtotal + taxVal;
 
@@ -1098,13 +1140,22 @@
     let c = customersList.find(item => item.dbId === currentActiveDbId);
     if(!c) return;
 
-    let surgeon = parseFloat(document.getElementById('invSurgeonFee').value) || 0;
-    let anesthesia = parseFloat(document.getElementById('invAnesthesiaFee').value) || 0;
-    let or = parseFloat(document.getElementById('invOrFee').value) || 0;
-    let stay = parseFloat(document.getElementById('invStayFee').value) || 0;
-    let supplies = parseFloat(document.getElementById('invSuppliesFee').value) || 0;
+    let container = document.getElementById('invoiceItemsContainer');
+    let rows = container.querySelectorAll('tr');
+    
+    let itemsArray = [];
+    let subtotal = 0;
 
-    let subtotal = surgeon + anesthesia + or + stay + supplies;
+    rows.forEach((tr, index) => {
+      let descInput = tr.querySelector('.inv-desc');
+      let amountInput = tr.querySelector('.inv-amount');
+      let desc = descInput ? descInput.value.trim() : `بند رقم ${index + 1}`;
+      let amt = amountInput ? (parseFloat(amountInput.value) || 0) : 0;
+
+      subtotal += amt;
+      itemsArray.push({ index: index + 1, desc: desc || `بند رقم ${index + 1}`, amount: amt });
+    });
+
     let taxType = document.getElementById('invTaxType').value;
     let taxRate = parseFloat(document.getElementById('invTaxRateInput').value) || 0;
     let taxVal = (subtotal * taxRate) / 100;
@@ -1113,6 +1164,17 @@
     let invoiceTypeTitle = 'فاتورة مبيعات وخدمات طبية';
     if (taxType === 'taxable') invoiceTypeTitle = `فاتورة ضريبية رسمية (شاملة ضريبة القيمة المضافة ${taxRate}%)`;
     if (taxType === 'cosmetic') invoiceTypeTitle = `فاتورة جراحات التجميل رسمية (شاملة ضريبة التجميل ${taxRate}%)`;
+
+    let tableRowsHTML = '';
+    itemsArray.forEach(item => {
+      tableRowsHTML += `
+        <tr>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${item.index}</td>
+          <td style="border:1px solid #000; padding:6px;">${item.desc}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:left;">${item.amount.toLocaleString()} ج.م</td>
+        </tr>
+      `;
+    });
 
     let printHTML = `
       <div style="font-size:1rem; line-height:1.6; color:#000;">
@@ -1140,27 +1202,23 @@
           </tr>
         </table>
 
-        <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">تفاصيل التكاليف والبنود:</h4>
+        <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">تفاصيل وتكاليف البنود:</h4>
         <table style="width:100%; border-collapse:collapse; margin-bottom:15px;">
           <thead>
             <tr style="background:#f1f5f9;">
-              <th style="border:1px solid #000; padding:8px; text-align:right;">#</th>
-              <th style="border:1px solid #000; padding:8px; text-align:right;">البيان / الخدمة الطبية</th>
-              <th style="border:1px solid #000; padding:8px; text-align:left;">المبلغ (ج.م)</th>
+              <th style="border:1px solid #000; padding:6px; width:45px; text-align:center;">#</th>
+              <th style="border:1px solid #000; padding:6px; text-align:right;">البيان / الخدمة الطبية</th>
+              <th style="border:1px solid #000; padding:6px; width:150px; text-align:left;">المبلغ (ج.م)</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td style="border:1px solid #000; padding:6px;">1</td><td style="border:1px solid #000; padding:6px;">أجر الطبيب والجراحة</td><td style="border:1px solid #000; padding:6px; text-align:left;">${surgeon.toLocaleString()} ج.م</td></tr>
-            <tr><td style="border:1px solid #000; padding:6px;">2</td><td style="border:1px solid #000; padding:6px;">أجر التخدير</td><td style="border:1px solid #000; padding:6px; text-align:left;">${anesthesia.toLocaleString()} ج.م</td></tr>
-            <tr><td style="border:1px solid #000; padding:6px;">3</td><td style="border:1px solid #000; padding:6px;">فتح غرفة العمليات والتجهيز</td><td style="border:1px solid #000; padding:6px; text-align:left;">${or.toLocaleString()} ج.م</td></tr>
-            <tr><td style="border:1px solid #000; padding:6px;">4</td><td style="border:1px solid #000; padding:6px;">الإقامة بالمستشفى والتمريض</td><td style="border:1px solid #000; padding:6px; text-align:left;">${stay.toLocaleString()} ج.م</td></tr>
-            <tr><td style="border:1px solid #000; padding:6px;">5</td><td style="border:1px solid #000; padding:6px;">المستلزمات والأدوية الطبية</td><td style="border:1px solid #000; padding:6px; text-align:left;">${supplies.toLocaleString()} ج.م</td></tr>
+            ${tableRowsHTML}
           </tbody>
         </table>
 
         <div style="width:55%; margin-right:auto; text-align:left; font-size:1rem; line-height:1.8;">
           <p style="margin:0; border-bottom:1px solid #eee;"><b>المبلغ الصافي للبنود:</b> ${subtotal.toLocaleString()} ج.م</p>
-          ${taxRate > 0 ? `<p style="margin:0; border-bottom:1px solid #eee; color:red;"><b>ضريبة القيمة المضافة (${taxRate}%):</b> ${taxVal.toLocaleString()} ج.م</p>` : ''}
+          ${taxRate > 0 ? `<p style="margin:0; border-bottom:1px solid #eee; color:red;"><b>ضريبة القيمة المضافة (${taxRate}\%):</b>${taxVal.toLocaleString()} ج.م</p>` : ''}
           <p style="margin:5px 0 0 0; font-size:1.15rem; color:#0f4c5c;"><b>الإجمالي المستحق بالفاتورة:</b> ${grandTotal.toLocaleString()} ج.م</p>
         </div>
 
