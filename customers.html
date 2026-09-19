@@ -1169,21 +1169,21 @@
     itemsArray.forEach(item => {
       tableRowsHTML += `
         <tr>
-          <td style="border:1px solid #000; padding:10px; text-align:center; font-size:1.05rem;">${item.index}</td>
-          <td style="border:1px solid #000; padding:10px; font-size:1.05rem; font-weight:bold;">${item.desc}</td>
-          <td style="border:1px solid #000; padding:10px; text-align:left; font-size:1.05rem; font-weight:bold;">${item.amount.toLocaleString()} ج.م</td>
+          <td style="border:1px solid #000; padding:10px; text-align:center; font-size:16px;">${item.index}</td>
+          <td style="border:1px solid #000; padding:10px; font-size:16px; font-weight:bold;">${item.desc}</td>
+          <td style="border:1px solid #000; padding:10px; text-align:left; font-size:16px; font-weight:bold;">${item.amount.toLocaleString()} ج.م</td>
         </tr>
       `;
     });
 
     let printHTML = `
-      <div style="font-size:1.1rem; line-height:1.7; color:#000; padding:10px;">
+      <div style="font-size:16px; line-height:1.7; color:#000; padding:10px;">
         <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #000; padding-bottom:12px;">
-          <h2 style="margin:0; font-size:1.5rem; color:#0f4c5c;">${invoiceTypeTitle}</h2>
-          <p style="margin:4px 0 0 0; font-size:0.95rem;">رقم الفاتورة: INV-${c.code}-${Date.now().toString().slice(-4)}</p>
+          <h2 style="margin:0; font-size:20px; color:#0f4c5c; font-weight:bold;">${invoiceTypeTitle}</h2>
+          <p style="margin:6px 0 0 0; font-size:16px;">رقم الفاتورة: INV-${c.code}-${Date.now().toString().slice(-4)}</p>
         </div>
 
-        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:1.05rem;">
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:16px;">
           <tr>
             <td style="padding:6px; border:none;"><b>كود العميل:</b> ${c.code}</td>
             <td style="padding:6px; border:none;"><b>اسم المريض:</b> ${c.name}</td>
@@ -1202,13 +1202,13 @@
           </tr>
         </table>
 
-        <h4 style="margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:6px; font-size:1.2rem; color:#0f4c5c;">تفاصيل وتكاليف البنود:</h4>
+        <h4 style="margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:6px; font-size:20px; color:#0f4c5c; font-weight:bold;">تفاصيل وتكاليف البنود:</h4>
         <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
           <thead>
             <tr style="background:#f1f5f9;">
-              <th style="border:1px solid #000; padding:10px; width:55px; text-align:center; font-size:1.1rem;">#</th>
-              <th style="border:1px solid #000; padding:10px; text-align:right; font-size:1.1rem;">البيان / الخدمة الطبية</th>
-              <th style="border:1px solid #000; padding:10px; width:160px; text-align:left; font-size:1.1rem;">المبلغ (ج.م)</th>
+              <th style="border:1px solid #000; padding:10px; width:55px; text-align:center; font-size:16px;">#</th>
+              <th style="border:1px solid #000; padding:10px; text-align:right; font-size:16px;">البيان / الخدمة الطبية</th>
+              <th style="border:1px solid #000; padding:10px; width:160px; text-align:left; font-size:16px;">المبلغ (ج.م)</th>
             </tr>
           </thead>
           <tbody>
@@ -1216,13 +1216,13 @@
           </tbody>
         </table>
 
-        <div style="width:60%; margin-right:auto; text-align:left; font-size:1.1rem; line-height:1.9;">
+        <div style="width:60%; margin-right:auto; text-align:left; font-size:16px; line-height:1.9;">
           <p style="margin:0; border-bottom:1px solid #ccc; padding:4px 0;"><b>المبلغ الصافي للبنود:</b> ${subtotal.toLocaleString()} ج.م</p>
           ${taxRate > 0 ? `<p style="margin:0; border-bottom:1px solid #ccc; padding:4px 0; color:red;"><b>ضريبة القيمة المضافة (${taxRate}\%):</b>${taxVal.toLocaleString()} ج.م</p>` : ''}
-          <p style="margin:8px 0 0 0; font-size:1.3rem; color:#0f4c5c;"><b>الإجمالي المستحق بالفاتورة:</b> ${grandTotal.toLocaleString()} ج.م</p>
+          <p style="margin:8px 0 0 0; font-size:20px; color:#0f4c5c; font-weight:bold;"><b>الإجمالي المستحق بالفاتورة:</b> ${grandTotal.toLocaleString()} ج.م</p>
         </div>
 
-        <div style="margin-top:40px; display:flex; justify-content:space-between; padding-top:20px; border-top:1px dashed #000; font-size:1rem;">
+        <div style="margin-top:40px; display:flex; justify-content:space-between; padding-top:20px; border-top:1px dashed #000; font-size:16px;">
           <div><b>توقيع مصدر الفاتورة:</b> ..........................</div>
           <div><b>توقيع الحسابات / الشئون المالية:</b> ..........................</div>
         </div>
