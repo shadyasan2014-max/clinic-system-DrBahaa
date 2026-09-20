@@ -722,13 +722,14 @@
 
     if (!error && data) {
       let matchedRecord = data.find(item => {
-        let pCode = (item.data && item.data.patientCode) || item.patientCode || item.code || '';
-        return pCode.trim().toLowerCase() === codeInput.toLowerCase();
+        let p = item.data || item;
+        let pCode = p.patientCode || p.code || p.id || p.patient_id || '';
+        return pCode.toString().trim().toLowerCase() === codeInput.toLowerCase();
       });
       
       if (matchedRecord) {
         let p = matchedRecord.data || matchedRecord;
-        document.getElementById('custName').value = p.patientName || p.name || '';
+        document.getElementById('custName').value = p.patientName || p.name || p.fullName || '';
         document.getElementById('operationType').value = p.operation || p.type || '';
         document.getElementById('hospital').value = p.hospital || '';
         document.getElementById('governorate').value = p.governorate || p.gov || '';
@@ -1280,8 +1281,9 @@
     const { data: preOpData } = await supabaseClient.from('preop_records').select('*');
     if (preOpData) {
       let matched = preOpData.find(item => {
-        let pCode = (item.data && item.data.patientCode) || item.patientCode || item.code || '';
-        return pCode.trim().toLowerCase() === c.code.toLowerCase();
+        let p = item.data || item;
+        let pCode = p.patientCode || p.code || p.id || p.patient_id || '';
+        return pCode.toString().trim().toLowerCase() === c.code.toLowerCase();
       });
       if (matched) {
         preOpInfo = matched.data || matched;
