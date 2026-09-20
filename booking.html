@@ -1,105 +1,121 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f4c5c">
+  <meta name="theme-color" content="#0f4c5c">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حجز موعد عيادة - المنظومة الطبية</title>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary: #0f4c5c;
+      --primary-hover: #0a3641;
+      --accent-gold: #d97706;
+      --accent-lime: #84cc16;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --border: #cbd5e1;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+    body {
+      background: linear-gradient(rgba(15, 76, 92, 0.9), rgba(15, 76, 92, 0.9)), url('doctor.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .booking-container {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+      border-top: 6px solid var(--accent-lime);
+    }
+    .clinic-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .clinic-header h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 6px; }
+    .clinic-header p { font-size: 0.9rem; color: #64748b; }
+    
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: 0.88rem; font-weight: 700; color: #334155; }
+    .field input, .field select, .field textarea {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1);
+    }
+    .btn-submit {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 14px;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 10px;
+    }
+    .btn-submit:hover { background: #15803d; }
+    
+    .btn-share {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-share:hover { background: var(--primary-hover); }
 
-  
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حجز موعد عيادة - المنظومة الطبية</title>
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --primary: #0f4c5c;
-    --primary-hover: #0a3641;
-    --accent-gold: #d97706;
-    --accent-lime: #84cc16;
-    --bg: #f8fafc;
-    --text: #1e293b;
-    --border: #cbd5e1;
-    --success: #16a34a;
-    --danger: #dc2626;
-  }
-  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-  body {
-    background: linear-gradient(rgba(15, 76, 92, 0.9), rgba(15, 76, 92, 0.9)), url('doctor.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: var(--text);
-    padding: 20px;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .booking-container {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    max-width: 500px;
-    width: 100%;
-    box-shadow: 0 20px 35px rgba(0,0,0,0.25);
-    border-top: 6px solid var(--accent-lime);
-  }
-  .clinic-header {
-    text-align: center;
-    margin-bottom: 25px;
-  }
-  .clinic-header h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 6px; }
-  .clinic-header p { font-size: 0.9rem; color: #64748b; }
-  
-  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-  .field label { font-size: 0.88rem; font-weight: 700; color: #334155; }
-  .field input, .field select, .field textarea {
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: 0.2s;
-  }
-  .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1);
-  }
-  .btn-submit {
-    background: var(--success);
-    color: white;
-    border: none;
-    padding: 14px;
-    width: 100%;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    margin-top: 10px;
-  }
-  .btn-submit:hover { background: #15803d; }
-  
-  .branch-info-box {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: #475569;
-    margin-bottom: 16px;
-    border-right: 4px solid var(--primary);
-    display: none;
-  }
-  
-  #successMessage {
-    display: none;
-    text-align: center;
-    padding: 20px;
-  }
-  #successMessage h3 { color: var(--success); font-size: 1.4rem; margin-bottom: 10px; }
-  #successMessage p { color: #475569; font-size: 0.95rem; line-height: 1.6; }
-</style>
+    .branch-info-box {
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #475569;
+      margin-bottom: 16px;
+      border-right: 4px solid var(--primary);
+      display: none;
+    }
+    
+    #successMessage {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    #successMessage h3 { color: var(--success); font-size: 1.4rem; margin-bottom: 10px; }
+    #successMessage p { color: #475569; font-size: 0.95rem; line-height: 1.6; }
+  </style>
 </head>
 <body>
 
@@ -110,6 +126,12 @@
       <h2>🏥 حجز موعد بالعيادة</h2>
       <p>املأ البيانات أدناه وسيتواصل معك فريق العيادة لتأكيد الموعد</p>
     </div>
+
+    <!-- زر المشاركة السريع للأبلكيشن -->
+    <button class="btn-share" onclick="shareApp()">
+      📤 مشاركة التطبيق مع الآخرين
+    </button>
+    <div style="margin-bottom: 16px;"></div>
 
     <div class="field">
       <label>اختر فرع العيادة:</label>
@@ -234,7 +256,6 @@
     if (!booking_date) return alert('⚠️ يرجى تحديد تاريخ الحجز.');
     if (!patient_name) return alert('⚠️ يرجى كتابة اسم المريض.');
 
-    // التحقق البرمجي من أن الاسم ثلاثي على الأقل (3 كلمات)
     let nameParts = patient_name.split(/\s+/);
     if (nameParts.length < 3) {
       return alert('⚠️ عذراً، يجب إدخال الاسم ثلاثياً على الأقل (مثال: أحمد محمد علي).');
@@ -259,6 +280,23 @@
       document.getElementById('successMessage').style.display = 'block';
     } else {
       alert('⚠️ حدث خطأ أثناء إرسال الحجز، يرجى المحاولة مرة أخرى.');
+    }
+  }
+
+  // كود مشاركة التطبيق الذكي
+  async function shareApp() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'منظومة د. بهاء شكري لجراحات السمنة',
+          text: 'احجز موعدك الآن بكل سهولة من خلال تطبيق منظومة د. بهاء شكري لجراحات السمنة:',
+          url: window.location.origin + '/booking.html'
+        });
+      } catch (err) {
+        console.log('تم إلغاء المشاركة');
+      }
+    } else {
+      alert('ميزة المشاركة غير مدعومة في هذا المتصفح، يمكنك نسخ الرابط مباشرة.');
     }
   }
 </script>
