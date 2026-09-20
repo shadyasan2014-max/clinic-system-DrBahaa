@@ -780,7 +780,7 @@
     });
   }
 
-  // --- دالة محسنة لجلب البيانات مع نظام حماية ضد بطء الاتصال ---
+  // --- دالة جلب البيانات الفائقة السرعة والآمنة ---
   async function fetchPreOpFromSupabase() {
     let tbody = document.getElementById('dailyTableBody');
     tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#0e7490; font-weight:bold; padding:15px;">⏳ جاري جلب الشيت أونلاين...</td></tr>';
@@ -789,10 +789,11 @@
       const { data, error } = await supabaseClient
         .from('preop_records')
         .select('*')
-        .order('id', { ascending: false });
+        .order('id', { ascending: false })
+        .limit(100);
 
       if (error) {
-        console.warn("تأخير في استجابة Supabase، جارٍ إعادة المحاولة...", error);
+        console.warn("تأخير في الاستجابة، جاري إعادة المحاولة...", error);
         setTimeout(fetchPreOpFromSupabase, 1500);
         return;
       }
