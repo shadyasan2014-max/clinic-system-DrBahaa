@@ -780,18 +780,34 @@
     });
   }
 
+  // --- دالة محسنة لجلب البيانات مع نظام حماية ضد بطء الاتصال ---
   async function fetchPreOpFromSupabase() {
     let tbody = document.getElementById('dailyTableBody');
-    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#0e7490; font-weight:bold;">⏳ جاري جلب الشيت أونلاين...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#0e7490; font-weight:bold; padding:15px;">⏳ جاري جلب الشيت أونلاين...</td></tr>';
 
-    const { data, error } = await supabaseClient.from('preop_records').select('*').order('id', { ascending: false });
+    try {
+      const { data, error } = await supabaseClient
+        .from('preop_records')
+        .select('*')
+        .order('id', { ascending: false });
 
-    if (error) {
-      tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#dc2626;">⚠️ تعذر الجلب، يرجى التأكد من إضافة جدول preop_records في Supabase.</td></tr>';
-    } else {
-      allPreOpRecords = data.map(item => ({ dbId: item.id, ...item.data }));
-      filterDailyList();
-      filterFullSheetByDate();
+      if (error) {
+        console.warn("تأخير في استجابة Supabase، جارٍ إعادة المحاولة...", error);
+        setTimeout(fetchPreOpFromSupabase, 1500);
+        return;
+      }
+
+      if (data) {
+        allPreOpRecords = data.map(item => ({ dbId: item.id, ...item.data }));
+        filterDailyList();
+        filterFullSheetByDate();
+      } else {
+        allPreOpRecords = [];
+        renderTableRows([], 'dailyTableBody');
+      }
+    } catch (err) {
+      console.error("خطأ في الاتصال:", err);
+      setTimeout(fetchPreOpFromSupabase, 2000);
     }
   }
 
