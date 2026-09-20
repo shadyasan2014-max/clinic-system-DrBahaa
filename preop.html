@@ -722,6 +722,7 @@
     }
   }
 
+  // دالة خاصة برفع ملف الإقرار (Consent) من جدول تأكيد العمليات
   async function handleConsentFile(input, dbId) {
     if (input.files && input.files[0]) {
       let file = input.files[0];
@@ -780,35 +781,18 @@
     });
   }
 
-  // --- دالة جلب البيانات الفائقة السرعة والآمنة ---
   async function fetchPreOpFromSupabase() {
     let tbody = document.getElementById('dailyTableBody');
-    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#0e7490; font-weight:bold; padding:15px;">⏳ جاري جلب الشيت أونلاين...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#0e7490; font-weight:bold;">⏳ جاري جلب الشيت أونلاين...</td></tr>';
 
-    try {
-      const { data, error } = await supabaseClient
-        .from('preop_records')
-        .select('*')
-        .order('id', { ascending: false })
-        .limit(100);
+    const { data, error } = await supabaseClient.from('preop_records').select('*').order('id', { ascending: false });
 
-      if (error) {
-        console.warn("تأخير في الاستجابة، جاري إعادة المحاولة...", error);
-        setTimeout(fetchPreOpFromSupabase, 1500);
-        return;
-      }
-
-      if (data) {
-        allPreOpRecords = data.map(item => ({ dbId: item.id, ...item.data }));
-        filterDailyList();
-        filterFullSheetByDate();
-      } else {
-        allPreOpRecords = [];
-        renderTableRows([], 'dailyTableBody');
-      }
-    } catch (err) {
-      console.error("خطأ في الاتصال:", err);
-      setTimeout(fetchPreOpFromSupabase, 2000);
+    if (error) {
+      tbody.innerHTML = '<tr><td colspan="19" style="text-align:center; color:#dc2626;">⚠️ تعذر الجلب، يرجى التأكد من إضافة جدول preop_records في Supabase.</td></tr>';
+    } else {
+      allPreOpRecords = data.map(item => ({ dbId: item.id, ...item.data }));
+      filterDailyList();
+      filterFullSheetByDate();
     }
   }
 
@@ -854,6 +838,7 @@
       let status = item.opStatus || 'pending';
       let showDetailsStyle = (status === 'completed') ? 'display:block;' : 'display:none;';
 
+      // زر لعرض الإقرار المرفق إذا وجد
       let consentViewHtml = '';
       if (item.consentFile) {
         let cFile = item.consentFile;
@@ -878,7 +863,7 @@
           </td>
           <td>
             <div id="detailsContainer_${item.dbId}" style="${showDetailsStyle}">
-              <input type="text" id="rowCode_${item.dbId}" value="${item.patientCode || ''}" onchange="checkAndSavePatientCode(${item.dbId})" placeholder="كود العملاء..." style="padding:6px; font-weight:bold; color:var(--primary); width:100%; margin-bottom:4px;">
+              <input type="text" id="rowCode_${item.dbId}" value="${item.patientCode || ''}" onchange="autoSaveRowStatus(${item.dbId})" placeholder="كود العملاء..." style="padding:6px; font-weight:bold; color:var(--primary); width:100%; margin-bottom:4px;">
               <div style="background:#f8fafc; border:1px dashed #cbd5e1; padding:6px; border-radius:6px;">
                 <label style="font-size:0.75rem; font-weight:bold; color:#166534; display:block; margin-bottom:2px;">📎 إقرار العملية (Consent):</label>
                 <input type="file" id="consentInput_${item.dbId}" accept="image/*,.pdf,.doc,.docx" onchange="handleConsentFile(this, ${item.dbId})" style="font-size:0.75rem; width:100%;">
@@ -892,37 +877,6 @@
         </tr>
       `;
     });
-  }
-
-  // --- دالة التحقق الفوري من عدم تكرار كود العميل ---
-  async function checkAndSavePatientCode(dbId) {
-    let codeInput = document.getElementById(`rowCode_${dbId}`);
-    let newCode = codeInput.value.trim();
-    if (!newCode) return;
-
-    let cleanCode = newCode.toLowerCase();
-
-    // 1. التحقق محلياً في القائمة (ما عدا الحالة الحالية)
-    let isDuplicateLocal = allPreOpRecords.some(r => r.dbId !== dbId && r.patientCode && r.patientCode.trim().toLowerCase() === cleanCode);
-    if (isDuplicateLocal) {
-      alert(`⚠️ عذراً: كود العميل (${newCode}) مسجل بالفعل لحالة أخرى في النظام! لا يمكن تكرار الأكواد.`);
-      codeInput.value = ''; // تفريغ الخانة فوراً
-      return;
-    }
-
-    // 2. التحقق من قاعدة البيانات أونلاين
-    const { data, error } = await supabaseClient.from('preop_records').select('*');
-    if (!error && data) {
-      let isDuplicateDb = data.some(item => item.id !== dbId && item.data && item.data.patientCode && item.data.patientCode.trim().toLowerCase() === cleanCode);
-      if (isDuplicateDb) {
-        alert(`⚠️ عذراً: كود العميل (${newCode}) مسجل بالفعل في قاعدة البيانات! لا يمكن تكرار الأكواد.`);
-        codeInput.value = ''; // تفريغ الخانة فوراً
-        return;
-      }
-    }
-
-    // إذا لم يكن مكرراً، يتم الحفظ أونلاين
-    autoSaveRowStatus(dbId);
   }
 
   function viewConsentFile(dbId) {
