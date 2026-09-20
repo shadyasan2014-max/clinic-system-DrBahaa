@@ -721,14 +721,17 @@
     const { data, error } = await supabaseClient.from('preop_records').select('*');
 
     if (!error && data) {
-      let matchedRecord = data.find(item => item.data && item.data.patientCode && item.data.patientCode.trim().toLowerCase() === codeInput.toLowerCase());
+      let matchedRecord = data.find(item => {
+        let pCode = (item.data && item.data.patientCode) || item.patientCode || item.code || '';
+        return pCode.trim().toLowerCase() === codeInput.toLowerCase();
+      });
       
       if (matchedRecord) {
-        let p = matchedRecord.data;
-        document.getElementById('custName').value = p.patientName || '';
-        document.getElementById('operationType').value = p.operation || '';
+        let p = matchedRecord.data || matchedRecord;
+        document.getElementById('custName').value = p.patientName || p.name || '';
+        document.getElementById('operationType').value = p.operation || p.type || '';
         document.getElementById('hospital').value = p.hospital || '';
-        document.getElementById('governorate').value = p.governorate || '';
+        document.getElementById('governorate').value = p.governorate || p.gov || '';
         if(p.opDate) document.getElementById('opDate').value = p.opDate;
       }
     }
@@ -1035,7 +1038,6 @@
     document.getElementById('customerModal').style.display = 'none';
   }
 
-  // --- دوال الفاتورة الديناميكية (إضافة وحذف بنود بلا حدود) ---
   function openInvoiceModalByDbId(dbId) {
     currentActiveDbId = dbId;
     let c = customersList.find(item => item.dbId === dbId);
@@ -1047,7 +1049,6 @@
     let container = document.getElementById('invoiceItemsContainer');
     container.innerHTML = '';
 
-    // البنود الافتراضية مقسمة من الإجمالي
     addInvoiceItemRow('أجر الطبيب والجراحة', Math.round(total * 0.50));
     addInvoiceItemRow('أجر التخدير', Math.round(total * 0.15));
     addInvoiceItemRow('فتح غرفة العمليات والتجهيز', Math.round(total * 0.15));
@@ -1275,17 +1276,18 @@
     let showFinancials = document.getElementById('repShowFinancials').checked;
     let medicalNotes = document.getElementById('repMedicalText').value.trim();
 
-    // 1. جلب بيانات Pre-Op الأساسية
     let preOpInfo = { age: '-', weight: '-', height: '-', bmi: '-', mh: '-', labs: '-' };
     const { data: preOpData } = await supabaseClient.from('preop_records').select('*');
     if (preOpData) {
-      let matched = preOpData.find(item => item.data && item.data.patientCode && item.data.patientCode.trim().toLowerCase() === c.code.toLowerCase());
-      if (matched && matched.data) {
-        preOpInfo = matched.data;
+      let matched = preOpData.find(item => {
+        let pCode = (item.data && item.data.patientCode) || item.patientCode || item.code || '';
+        return pCode.trim().toLowerCase() === c.code.toLowerCase();
+      });
+      if (matched) {
+        preOpInfo = matched.data || matched;
       }
     }
 
-    // 2. جلب سجل حضور العيادات
     let clinicVisitsHTML = '';
     const { data: appData } = await supabaseClient.from('appointments').select('*');
     if (appData) {
@@ -1332,7 +1334,6 @@
       }
     }
 
-    // 3. جلب سجل متابعات ما بعد العملية
     let postOpVisitsHTML = '';
     const { data: postData } = await supabaseClient.from('postop_records').select('*');
     if (postData) {
