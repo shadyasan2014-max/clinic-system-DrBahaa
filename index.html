@@ -1,227 +1,220 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-
-  
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f4c5c">
-
-  
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f4c5c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#0f4c5c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>البوابة الطبية الرئيسية - د. بهاء شكري</title>
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --primary: #0f4c5c;
-    --primary-hover: #0a3641;
-    --accent-gold: #d97706;
-    --accent-lime: #84cc16;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text: #1e293b;
-    --border: #cbd5e1;
-    --success: #16a34a;
-    --warning: #ca8a04;
-    --danger: #dc2626;
-    --purple: #7c3aed;
-    --cyan: #0e7490;
-  }
-  
-  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-body { 
-    background: linear-gradient(rgba(15, 76, 92, 0.85), rgba(15, 76, 92, 0.85)), url('doctor.jpg');
-    background-size: contain; /* إظهار الصورة بالكامل دون قص أطرافها */
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: var(--text); 
-    padding: 20px; 
-    line-height: 1.5; 
-    min-height: 100vh; 
-  }
-  
-  /* Auth Screen Overlay */
-  #authOverlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #155e75 0%, #0f4c5c 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    padding: 20px;
-  }
-  .auth-box {
-    background: white;
-    padding: 35px 30px;
-    border-radius: 16px;
-    max-width: 420px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 20px 35px rgba(0,0,0,0.25);
-    border-top: 5px solid var(--accent-lime);
-  }
-  .auth-box .auth-logo {
-    width: 75px; height: 75px; border-radius: 50%;
-    border: 3px solid var(--accent-lime); margin: 0 auto 15px;
-    overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff;
-    cursor: pointer;
-  }
-  .auth-box .auth-logo img { width: 100%; height: 100%; object-fit: cover; }
-  .auth-box h2 { color: var(--primary); margin-bottom: 6px; font-size: 1.35rem; }
-  .auth-box p { font-size: 0.88rem; color: #64748b; margin-bottom: 22px; }
-  .auth-box input {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    margin-bottom: 14px;
-    outline: none;
-    transition: 0.2s;
-  }
-  .auth-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1); }
-  
-  header { 
-    background: var(--primary); 
-    color: white; 
-    padding: 18px 24px; 
-    border-radius: 14px; 
-    margin-bottom: 25px; 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 6px 15px rgba(15, 76, 92, 0.18); 
-    border-bottom: 4px solid var(--accent-lime);
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  .brand-logo { 
-    display: flex; 
-    align-items: center; 
-    gap: 16px; 
-    text-decoration: none; 
-    color: inherit; 
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .brand-logo:hover { opacity: 0.95; }
-  .logo-box {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    border: 2px solid var(--accent-lime);
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .logo-box img { width: 100%; height: 100%; object-fit: cover; }
-  .header-text h1 { font-size: 1.4rem; margin-bottom: 2px; color: #ffffff; }
-  .header-text p { font-size: 0.88rem; color: var(--accent-lime); font-weight: 500; }
-  
-  .btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-  .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-  .btn-success { background: var(--success); }
-  .btn-success:hover { background: #15803d; }
-  .btn-danger { background: var(--danger); }
-  .btn-danger:hover { background: #b91c1c; }
-  .btn-warning { background: var(--accent-gold); color: white; }
-  .btn-warning:hover { background: #b45309; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>البوابة الطبية الرئيسية - د. بهاء شكري</title>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary: #0f4c5c;
+      --primary-hover: #0a3641;
+      --accent-gold: #d97706;
+      --accent-lime: #84cc16;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #cbd5e1;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+      --purple: #7c3aed;
+      --cyan: #0e7490;
+    }
+    
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+    body { 
+      background: linear-gradient(rgba(15, 76, 92, 0.85), rgba(15, 76, 92, 0.85)), url('doctor.jpg');
+      background-size: contain; 
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: var(--text); 
+      padding: 20px; 
+      line-height: 1.5; 
+      min-height: 100vh; 
+    }
+    
+    /* Auth Screen Overlay */
+    #authOverlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at center, #155e75 0%, #0f4c5c 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .auth-box {
+      background: white;
+      padding: 35px 30px;
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+      border-top: 5px solid var(--accent-lime);
+    }
+    .auth-box .auth-logo {
+      width: 75px; height: 75px; border-radius: 50%;
+      border: 3px solid var(--accent-lime); margin: 0 auto 15px;
+      overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff;
+      cursor: pointer;
+    }
+    .auth-box .auth-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .auth-box h2 { color: var(--primary); margin-bottom: 6px; font-size: 1.35rem; }
+    .auth-box p { font-size: 0.88rem; color: #64748b; margin-bottom: 22px; }
+    .auth-box input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .auth-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.1); }
+    
+    header { 
+      background: var(--primary); 
+      color: white; 
+      padding: 18px 24px; 
+      border-radius: 14px; 
+      margin-bottom: 25px; 
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 6px 15px rgba(15, 76, 92, 0.18); 
+      border-bottom: 4px solid var(--accent-lime);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .brand-logo { 
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+      text-decoration: none; 
+      color: inherit; 
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .brand-logo:hover { opacity: 0.95; }
+    .logo-box {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-lime);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .header-text h1 { font-size: 1.4rem; margin-bottom: 2px; color: #ffffff; }
+    .header-text p { font-size: 0.88rem; color: var(--accent-lime); font-weight: 500; }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-warning { background: var(--accent-gold); color: white; }
+    .btn-warning:hover { background: #b45309; }
 
-  /* Live Summary Stats Bar */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-  .stat-card {
-    background: white;
-    padding: 18px 20px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: transform 0.2s;
-  }
-  .stat-card:hover { transform: translateY(-2px); }
-  .stat-info h4 { font-size: 0.85rem; color: #64748b; margin-bottom: 4px; }
-  .stat-info .num { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
-  .stat-icon { font-size: 2.2rem; opacity: 0.85; }
+    /* Live Summary Stats Bar */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-card {
+      background: white;
+      padding: 18px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-info h4 { font-size: 0.85rem; color: #64748b; margin-bottom: 4px; }
+    .stat-info .num { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+    .stat-icon { font-size: 2.2rem; opacity: 0.85; }
 
-  /* Main Portals Grid */
-  .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; }
-  .portal-card {
-    background: white;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    padding: 24px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.25s ease;
-    text-decoration: none;
-    color: inherit;
-  }
-  .portal-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(15, 76, 92, 0.12);
-    border-color: var(--primary);
-  }
-  
-  .portal-badge {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
-  }
-  .badge-acc { background: #e0f2fe; color: #0369a1; }
-  .badge-pre { background: #fee2e2; color: #991b1b; }
-  .badge-cln { background: #fef3c7; color: #b45309; }
-  .badge-post { background: #dcfce7; color: #166534; }
+    /* Main Portals Grid */
+    .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; }
+    .portal-card {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(15, 76, 92, 0.12);
+      border-color: var(--primary);
+    }
+    
+    .portal-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-acc { background: #e0f2fe; color: #0369a1; }
+    .badge-pre { background: #fee2e2; color: #991b1b; }
+    .badge-cln { background: #fef3c7; color: #b45309; }
+    .badge-post { background: #dcfce7; color: #166534; }
 
-  .portal-icon { font-size: 2.5rem; margin-bottom: 12px; }
-  .portal-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-  .portal-desc { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
-  .portal-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: #f1f5f9;
-    color: var(--primary);
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    transition: 0.2s;
-  }
-  .portal-card:hover .portal-btn { background: var(--primary); color: white; }
+    .portal-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .portal-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .portal-desc { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+    .portal-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background: #f1f5f9;
+      color: var(--primary);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+    .portal-card:hover .portal-btn { background: var(--primary); color: white; }
 
-  /* Modal Styles */
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); justify-content: center; align-items: center; padding: 15px; z-index: 1000; }
-  .modal-content { background: white; padding: 22px; border-radius: 12px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 0.82rem; font-weight: 600; color: #334155; }
-  .field input, .field select { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.88rem; outline: none; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: right; }
-  th, td { padding: 8px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
-  th { background-color: #f1f5f9; color: var(--primary); font-weight: bold; }
-</style>
+    /* Modal Styles */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); justify-content: center; align-items: center; padding: 15px; z-index: 1000; }
+    .modal-content { background: white; padding: 22px; border-radius: 12px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.82rem; font-weight: 600; color: #334155; }
+    .field input, .field select { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.88rem; outline: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: right; }
+    th, td { padding: 8px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    th { background-color: #f1f5f9; color: var(--primary); font-weight: bold; }
+  </style>
 </head>
 <body>
 
@@ -240,7 +233,7 @@ body {
   </div>
 </div>
 
-<div class="container" id="mainContainer">
+<div class="container" id="mainContainer" style="display: none;">
   <!-- Header with Link to index.html -->
   <header>
     <a href="index.html" class="brand-logo" title="الرجوع للبوابة الرئيسية">
@@ -254,6 +247,10 @@ body {
     </a>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <span id="userBadge" style="font-size: 0.88rem; background: rgba(255,255,255,0.18); padding: 7px 14px; border-radius: 20px; font-weight: bold;">👤 مرحباً: ...</span>
+      
+      <!-- زر مشاركة التطبيق الذكي -->
+      <button onclick="shareApp()" style="background: var(--accent-lime); color: #0f4c5c; border: none; padding: 7px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;">📤 مشاركة التطبيق</button>
+      
       <button onclick="openChangePasswordModal()" style="background: #0284c7; color: white; border: none; padding: 7px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;">🔑 تغيير كلمة السر</button>
       <button onclick="openUsersModal()" id="manageUsersBtn" style="background: #d97706; color: white; border: none; padding: 7px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold; display: none;">👤 إدارة المستخدمين</button>
       <button onclick="logoutPortal()" style="background: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;">🔒 خروج</button>
@@ -379,7 +376,6 @@ body {
       <button onclick="closeUsersModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
     </div>
 
-    <!-- نموذج إضافة أو تعديل مستخدم -->
     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">
       <h4 id="formTitleUser" style="margin-bottom: 10px; color: var(--primary);">➕ إضافة مستخدم جديد وتحديد تخصصه وصلاحياته:</h4>
       <input type="hidden" id="editingUserId" value="">
@@ -389,7 +385,6 @@ body {
         <div class="field"><label>كلمة السر</label><input type="text" id="newPassword" placeholder="مثال: 123456"></div>
         <div class="field" style="grid-column: span 2;"><label>الاسم الظاهر</label><input type="text" id="newFullName" placeholder="مثال: أحمد (موظف الاستقبال)"></div>
         
-        <!-- اختيار التخصص -->
         <div class="field" style="grid-column: span 2;">
           <label>التخصص / الوظيفة:</label>
           <select id="userSpecialty" onchange="checkOtherSpecialty(this)">
@@ -401,14 +396,12 @@ body {
           </select>
         </div>
         
-        <!-- حقل يظهر فقط عند اختيار "اخري" -->
         <div class="field" id="otherSpecialtyBox" style="grid-column: span 2; display: none;">
           <label>اكتب التخصص الآخر:</label>
           <input type="text" id="otherSpecialtyInput" placeholder="اكتب التخصص هنا...">
         </div>
       </div>
 
-      <!-- خانات الصلاحيات المخصصة (Checkboxes) -->
       <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 12px;">
         <label style="font-weight: bold; color: var(--primary); display: block; margin-bottom: 8px;">🔐 حدد الأقسام المسموح له بدخولها وصلاحياته:</label>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 0.9rem;">
@@ -427,7 +420,6 @@ body {
       </div>
     </div>
 
-    <!-- قائمة المستخدمين الحالية -->
     <h4 style="color: var(--primary); margin-bottom: 8px;">📋 قائمة المستخدمين وصلاحياتهم المسجلة:</h4>
     <div style="overflow-x: auto;">
       <table>
@@ -502,13 +494,11 @@ body {
 
     let role = currentUser.role;
 
-    // إظهار الإحصائيات الحية للآدمن فقط
     let statsGrid = document.querySelector('.stats-grid');
     if (statsGrid) {
       statsGrid.style.display = (role === 'admin') ? 'grid' : 'none';
     }
 
-    // إذا كان المشرف العام، يرى كل شيء بالكامل
     if (role === 'admin') {
       document.getElementById('cardPreOp').style.display = 'flex';
       document.getElementById('cardClinics').style.display = 'flex';
@@ -518,7 +508,6 @@ body {
       return;
     }
 
-    // قراءة الصلاحيات المخصصة المحفوظة للمستخدم
     let p = currentUser.permissions || { preop: true, clinics: true, postop: true, customers: false, canDelete: false };
 
     document.getElementById('cardPreOp').style.display = p.preop ? 'flex' : 'none';
@@ -535,7 +524,6 @@ body {
     document.getElementById('authOverlay').style.display = 'flex';
   }
 
-  /* إظهار أو إخفاء حقل "اخري" */
   function checkOtherSpecialty(select) {
     let box = document.getElementById('otherSpecialtyBox');
     if (select.value === 'اخري') {
@@ -546,7 +534,6 @@ body {
     }
   }
 
-  /* تحديد واختيار كل الصلاحيات عند اختيار مدير نظام */
   function toggleAdminPermissions(checkbox) {
     let isChecked = checkbox.checked;
     document.getElementById('perm_preop').checked = isChecked;
@@ -556,7 +543,6 @@ body {
     document.getElementById('perm_delete').checked = isChecked;
   }
 
-  /* تغيير كلمة السر */
   function openChangePasswordModal() {
     if (!currentUser) return;
     document.getElementById('currentPassInput').value = '';
@@ -605,7 +591,6 @@ body {
     }
   }
 
-  /* إدارة المستخدمين والصلاحيات للآدمن فقط */
   function openUsersModal() {
     if (!currentUser || currentUser.role !== 'admin') {
       return alert('⚠️ غير مسموح: صلاحية إدارة المستخدمين متاحة فقط لحساب المشرف العام (Admin).');
@@ -644,7 +629,6 @@ body {
           if (p.canDelete) permsList.push('⚠️ صلاحية الحذف');
         }
 
-        // أزرار التعديل والحذف لكل المستخدمين ما عدا حسابك الحالي لمنع حذف نفسك خطأً
         let actionButtons = '';
         if (user.username !== currentUser.username) {
           actionButtons = `
@@ -673,7 +657,6 @@ body {
     }
   }
 
-  /* تجهيز نموذج التعديل */
   function editUser(user) {
     document.getElementById('editingUserId').value = user.id;
     document.getElementById('newUsername').value = user.username || '';
@@ -711,7 +694,6 @@ body {
     document.getElementById('cancelEditBtn').style.display = 'inline-block';
   }
 
-  /* إلغاء وضع التعديل وإرجاع النموذج لوضع الإضافة */
   function resetUserForm() {
     document.getElementById('editingUserId').value = '';
     document.getElementById('newUsername').value = '';
@@ -732,7 +714,6 @@ body {
     document.getElementById('cancelEditBtn').style.display = 'none';
   }
 
-  /* حفظ مستخدم جديد أو تحديث مستخدم قديم */
   async function saveUserRecord() {
     if (!currentUser || currentUser.role !== 'admin') {
       return alert('⚠️ غير مسموح: هذه الصلاحية متاحة للآدمن فقط.');
@@ -769,7 +750,6 @@ body {
     };
 
     if (editId) {
-      // تعديل مستخدم موجود
       const { error } = await supabaseClient.from('system_users').update(userData).eq('id', editId);
       if (!error) {
         alert('✅ تم تحديث بيانات المستخدم وصلاحياته بنجاح!');
@@ -779,7 +759,6 @@ body {
         alert('⚠️ تعذر التعديل، يرجى المحاولة لاحقاً.');
       }
     } else {
-      // إضافة مستخدم جديد
       const { error } = await supabaseClient.from('system_users').insert([userData]);
       if (!error) {
         alert('✅ تم إضافة المستخدم وتحديد صلاحياته بنجاح!');
@@ -826,6 +805,23 @@ body {
     if (role === 'admin' || p.customers) {
       const { count: custCount } = await supabaseClient.from('customers').select('*', { count: 'exact', head: true });
       document.getElementById('countCustomers').innerText = custCount || 0;
+    }
+  }
+
+  // كود مشاركة التطبيق الذكي
+  async function shareApp() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'منظومة د. بهاء شكري الطبية',
+          text: 'ادخل إلى منظومة د. بهاء شكري الطبية لإدارة العمليات والعيادات بكل سهولة:',
+          url: window.location.origin + '/index.html'
+        });
+      } catch (err) {
+        console.log('تم إلغاء المشاركة');
+      }
+    } else {
+      alert('ميزة المشاركة غير مدعومة في هذا المتصفح، يمكنك نسخ الرابط مباشرة.');
     }
   }
 </script>
