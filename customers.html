@@ -229,7 +229,8 @@
       <div class="grid">
         <div class="field">
           <label>كود العميل (اكتب الكود لجلب الاسم أوتوماتيكياً)</label>
-          <input type="text" id="custCode" placeholder="مثال: C-101" onchange="fetchPatientNameFromPreOp()" required>
+          <input type="text" id="custCode" placeholder="مثال: C-101" oninput="fetchPatientNameFromPreOp()" onblur="fetchPatientNameFromPreOp()" required>
+          <small id="codeStatusMsg" style="color: var(--primary); font-weight: bold;"></small>
         </div>
         <div class="field">
           <label>اسم العميل بالكامل</label>
@@ -716,14 +717,29 @@
 
   async function fetchPatientNameFromPreOp() {
     let codeInput = document.getElementById('custCode').value.trim();
-    if (!codeInput) return;
+    let statusMsg = document.getElementById('codeStatusMsg');
+    
+    if (!codeInput) {
+      statusMsg.innerText = "";
+      return;
+    }
+
+    statusMsg.innerText = "⏳ جاري البحث عن الكود في قاعدة البيانات...";
+    statusMsg.style.color = "#0e7490";
 
     const { data, error } = await supabaseClient.from('preop_records').select('*');
 
-    if (!error && data) {
+    if (error) {
+      statusMsg.innerText = "⚠️ خطأ في الاتصال بقاعدة البيانات.";
+      statusMsg.style.color = "#dc2626";
+      return;
+    }
+
+    if (data && data.length > 0) {
       let matchedRecord = data.find(item => {
         let p = item.data || item;
-        let pCode = p.patientCode || p.code || p.id || p.patient_id || '';
+        // فحص كافة الاحتمالات لمفاتيح الكود أو الأيدي داخل الـ JSON
+        let pCode = p.patientCode || p.code || p.id || p.patient_id || p.customerCode || '';
         return pCode.toString().trim().toLowerCase() === codeInput.toLowerCase();
       });
       
@@ -734,7 +750,16 @@
         document.getElementById('hospital').value = p.hospital || '';
         document.getElementById('governorate').value = p.governorate || p.gov || '';
         if(p.opDate) document.getElementById('opDate').value = p.opDate;
+        
+        statusMsg.innerText = "✅ تم جلب بيانات المريض بنجاح!";
+        statusMsg.style.color = "#16a34a";
+      } else {
+        statusMsg.innerText = "⚠️ الكود غير مسجل في شيت ما قبل العملية (preop_records)";
+        statusMsg.style.color = "#d97706";
       }
+    } else {
+      statusMsg.innerText = "⚠️ جدول preop_records فارغ!";
+      statusMsg.style.color = "#dc2626";
     }
   }
 
