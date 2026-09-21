@@ -748,9 +748,10 @@
         document.getElementById('operationType').value = p.operation || p.type || '';
         document.getElementById('hospital').value = p.hospital || '';
         document.getElementById('governorate').value = p.governorate || p.gov || '';
+        document.getElementById('custAddress').value = p.address || p.governorate || p.gov || '';
         if(p.opDate) document.getElementById('opDate').value = p.opDate;
         
-        statusMsg.innerText = "✅ تم جلب بيانات المريض بنجاح من شيت Pre-Op!";
+        statusMsg.innerText = "✅ تم جلب بيانات المريض والعنوان بنجاح من شيت Pre-Op!";
         statusMsg.style.color = "#16a34a";
       } else {
         statusMsg.innerText = "ℹ️ الكود غير مسجل في Pre-Op، يمكنك تسجيله يدوياً";
@@ -797,7 +798,8 @@
         (c.name && c.name.toLowerCase().includes(query)) || 
         (c.phone && c.phone.includes(query)) || 
         (c.nationalId && c.nationalId.includes(query)) ||
-        (c.code && c.code.toLowerCase().includes(query))
+        (c.code && c.code.toLowerCase().includes(query)) ||
+        (c.address && c.address.toLowerCase().includes(query))
       );
     }
 
@@ -840,7 +842,6 @@
     document.getElementById('companyBox').style.display = (type === 'company') ? 'block' : 'none';
   }
 
-  // دالة التحقق من التكرار (تتحقق فقط داخل جدول الحسابات لعدم حفظ نفس الكود مرتين بحسابات العملاء)
   async function checkCodeExists(code, currentDbId = -1) {
     let codeClean = code.trim().toLowerCase();
 
@@ -863,6 +864,7 @@
     let name = document.getElementById('custName').value;
     let phone = document.getElementById('custPhone1').value;
     let nationalId = document.getElementById('custNationalId').value;
+    let address = document.getElementById('custAddress').value;
     let type = document.getElementById('operationType').value || 'عملية جراحية';
     let hospital = document.getElementById('hospital').value;
     let gov = document.getElementById('governorate').value;
@@ -877,7 +879,6 @@
     let gId = document.getElementById('gId').value || '';
     let gPhone = document.getElementById('gPhone').value || '';
 
-    // التحقق من تكرار الكود داخل الحسابات فقط
     let isCodeExists = await checkCodeExists(code, editDbId);
     if (isCodeExists) {
       alert(`⚠️ خطأ: كود العميل (${code}) مسجل بالفعل بنظام الحسابات! لا يمكن تكرار نفس كود الحساب مرتين.`);
@@ -885,7 +886,7 @@
     }
 
     let customerPayload = {
-      code, name, phone, nationalId, type, hospital, gov, elite, company, total, initialPaid, payType, opDate,
+      code, name, phone, nationalId, address, type, hospital, gov, elite, company, total, initialPaid, payType, opDate,
       gName, gId, gPhone,
       custImg: currentCustImg,
       gImg: currentGuarantorImg
@@ -930,6 +931,7 @@
     document.getElementById('custName').value = c.name;
     document.getElementById('custPhone1').value = c.phone;
     document.getElementById('custNationalId').value = c.nationalId || '';
+    document.getElementById('custAddress').value = c.address || '';
     document.getElementById('operationType').value = c.type;
     document.getElementById('hospital').value = c.hospital || '';
     document.getElementById('governorate').value = c.gov || '';
@@ -1433,7 +1435,7 @@
           </tr>
           <tr>
             <td style="padding:5px; border:1px solid #e2e8f0;"><b>رقم الهاتف:</b> ${c.phone}</td>
-            <td style="padding:5px; border:1px solid #e2e8f0;"><b>العنوان والمحافظة:</b> ${c.gov || c.address || '-'}</td>
+            <td style="padding:5px; border:1px solid #e2e8f0;"><b>العنوان والمحافظة:</b> ${c.address || c.gov || '-'}</td>
           </tr>
           <tr>
             <td style="padding:5px; border:1px solid #e2e8f0;"><b>الإجراء الجراحي:</b> ${c.type}</td>
@@ -1557,6 +1559,7 @@
         <p><b>كود العميل:</b> ${c.code}</p>
         <p><b>اسم العميل:</b> ${c.name}</p>
         <p><b>رقم التليفون:</b> ${c.phone} | <b>الرقم القومي:</b> ${c.nationalId || '-'}</p>
+        <p><b>العنوان:</b> ${c.address || '-'}</p>
         <p><b>نوع العملية:</b> ${c.type} | <b>تاريخ العملية:</b> ${c.opDate || '-'} | <b>المستشفى:</b> ${c.hospital || '-'} (${c.gov || '-'})</p>
         <p><b>كارت إيليت:</b> ${c.elite} | <b>نظام الدفع:</b> ${payText}</p>
         <hr style="margin:15px 0; border:1px solid #000;">
@@ -1627,7 +1630,8 @@
         (c.name && c.name.toLowerCase().includes(query)) || 
         (c.phone && c.phone.includes(query)) || 
         (c.nationalId && c.nationalId.includes(query)) ||
-        (c.code && c.code.toLowerCase().includes(query))
+        (c.code && c.code.toLowerCase().includes(query)) ||
+        (c.address && c.address.toLowerCase().includes(query))
       );
     }
 
