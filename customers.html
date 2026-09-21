@@ -738,7 +738,6 @@
     if (data && data.length > 0) {
       let matchedRecord = data.find(item => {
         let p = item.data || item;
-        // فحص كافة الاحتمالات لمفاتيح الكود أو الأيدي داخل الـ JSON
         let pCode = p.patientCode || p.code || p.id || p.patient_id || p.customerCode || '';
         return pCode.toString().trim().toLowerCase() === codeInput.toLowerCase();
       });
@@ -751,10 +750,10 @@
         document.getElementById('governorate').value = p.governorate || p.gov || '';
         if(p.opDate) document.getElementById('opDate').value = p.opDate;
         
-        statusMsg.innerText = "✅ تم جلب بيانات المريض بنجاح!";
+        statusMsg.innerText = "✅ تم جلب بيانات المريض بنجاح من شيت Pre-Op!";
         statusMsg.style.color = "#16a34a";
       } else {
-        statusMsg.innerText = "⚠️ الكود غير مسجل في شيت ما قبل العملية (preop_records)";
+        statusMsg.innerText = "ℹ️ الكود غير مسجل في Pre-Op، يمكنك تسجيله يدوياً";
         statusMsg.style.color = "#d97706";
       }
     } else {
@@ -841,6 +840,7 @@
     document.getElementById('companyBox').style.display = (type === 'company') ? 'block' : 'none';
   }
 
+  // دالة التحقق من التكرار (تتحقق فقط داخل جدول الحسابات لعدم حفظ نفس الكود مرتين بحسابات العملاء)
   async function checkCodeExists(code, currentDbId = -1) {
     let codeClean = code.trim().toLowerCase();
 
@@ -877,9 +877,10 @@
     let gId = document.getElementById('gId').value || '';
     let gPhone = document.getElementById('gPhone').value || '';
 
+    // التحقق من تكرار الكود داخل الحسابات فقط
     let isCodeExists = await checkCodeExists(code, editDbId);
     if (isCodeExists) {
-      alert(`⚠️ خطأ: كود العميل (${code}) مسجل بالفعل بنظام الحسابات! لا يمكن تكرار الأكواد.`);
+      alert(`⚠️ خطأ: كود العميل (${code}) مسجل بالفعل بنظام الحسابات! لا يمكن تكرار نفس كود الحساب مرتين.`);
       return;
     }
 
@@ -983,6 +984,7 @@
     document.getElementById('customerForm').reset();
     document.getElementById('custImgPrev').style.display = 'none';
     document.getElementById('gImgPrev').style.display = 'none';
+    document.getElementById('codeStatusMsg').innerText = '';
     currentCustImg = "";
     currentGuarantorImg = "";
     handlePaymentTypeChange();
