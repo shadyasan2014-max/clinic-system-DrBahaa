@@ -722,7 +722,6 @@
     }
   }
 
-  // دالة خاصة برفع ملف الإقرار (Consent) من جدول تأكيد العمليات
   async function handleConsentFile(input, dbId) {
     if (input.files && input.files[0]) {
       let file = input.files[0];
@@ -838,7 +837,6 @@
       let status = item.opStatus || 'pending';
       let showDetailsStyle = (status === 'completed') ? 'display:block;' : 'display:none;';
 
-      // زر لعرض الإقرار المرفق إذا وجد
       let consentViewHtml = '';
       if (item.consentFile) {
         let cFile = item.consentFile;
@@ -1068,6 +1066,12 @@
   async function savePreOpRecord() {
     let patientName = document.getElementById('patientName').value.trim();
     if(!patientName) return alert("يرجى كتابة اسم الحالة");
+
+    // التحقق من عدم تكرار اسم الحالة في السجلات المسجلة مسبقاً
+    let isAlreadyExists = allPreOpRecords.some(item => item.patientName && item.patientName.trim().toLowerCase() === patientName.toLowerCase());
+    if (isAlreadyExists) {
+      return alert(`⚠️ عذراً، اسم الحالة (${patientName}) مسجل بالفعل مسبقاً في شيت Pre-Op ولا يمكن تكراره!`);
+    }
 
     let payload = {
       opDate: document.getElementById('opDate').value,
