@@ -991,7 +991,7 @@
       let codeInputElem = document.getElementById(`rowCode_${dbId}`);
       let codeVal = codeInputElem.value.trim();
 
-      // التحقق من عدم تكرار الكود
+      // التحقق من عدم تكرار كود العملاء فقط
       if (codeVal) {
         let isDuplicate = allPreOpRecords.some(r => r.dbId !== dbId && r.patientCode && r.patientCode.trim().toLowerCase() === codeVal.toLowerCase());
         if (isDuplicate) {
@@ -1146,10 +1146,7 @@
     let patientName = document.getElementById('patientName').value.trim();
     if(!patientName) return alert("يرجى كتابة اسم الحالة");
 
-    let isAlreadyExists = allPreOpRecords.some(item => item.patientName && item.patientName.trim().toLowerCase() === patientName.toLowerCase());
-    if (isAlreadyExists) {
-      return alert(`⚠️ عذراً، اسم الحالة (${patientName}) مسجل بالفعل مسبقاً في شيت Pre-Op ولا يمكن تكراره!`);
-    }
+    // تم إلغاء شرط منع تكرار اسم المريض للسماح بتسجيل نفس المريض لأكثر من عملية في تواريخ مختلفة
 
     let payload = {
       opDate: document.getElementById('opDate').value,
