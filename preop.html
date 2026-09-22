@@ -326,8 +326,9 @@
 
   <!-- 📅 SECTION 1: Daily Operations Filter & Confirmation List (تأكيد يومية العمليات) -->
   <div class="card" style="background: #f0f9ff; border-color: #bae6fd;">
-    <div class="card-title" style="color: #0369a1; border-color: #bae6fd;">
+    <div class="card-title" style="color: #0369a1; border-color: #bae6fd; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <span>📅 الجزء الأول: تصفية وتأكيد يومية العمليات (تأكيد إجراء العملية )</span>
+      <button class="btn btn-info" style="font-size: 0.82rem; padding: 6px 14px;" onclick="openCodesQueryModal()">🔍 استعلام الأكواد المسجلة</button>
     </div>
     
     <div class="grid">
@@ -422,6 +423,34 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Codes Query (استعلام الأكواد) -->
+<div id="codesQueryModal" class="modal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 16px;">
+      <h3 style="color: var(--primary);">🔍 استعلام الأكواد المسجلة للحالات</h3>
+      <button onclick="closeCodesQueryModal()" style="background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">إغلاق X</button>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <input type="text" id="codesSearchInput" placeholder="ابحث بكود العميل أو اسم المريض..." onkeyup="filterCodesQueryList()" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; outline:none;">
+    </div>
+    <div style="max-height: 50vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+      <table style="width:100%; border-collapse:collapse; text-align:right;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:8px; border-bottom:1px solid var(--border);">كود العميل</th>
+            <th style="padding:8px; border-bottom:1px solid var(--border);">اسم المريض</th>
+            <th style="padding:8px; border-bottom:1px solid var(--border);">تاريخ العملية</th>
+            <th style="padding:8px; border-bottom:1px solid var(--border);">المستشفى</th>
+          </tr>
+        </thead>
+        <tbody id="codesQueryTableBody">
+          <tr><td colspan="4" style="text-align:center; padding:15px;">جاري تحميل الأكواد...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -877,6 +906,45 @@
     });
   }
 
+  // 🔍 وظائف نافذة استعلام الأكواد المسجلة
+  function openCodesQueryModal() {
+    let tbody = document.getElementById('codesQueryTableBody');
+    tbody.innerHTML = '';
+    
+    let validRecords = allPreOpRecords.filter(item => item.patientCode && item.patientCode.trim() !== '');
+
+    if (validRecords.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#94a3b8;">لا توجد أكواد مسجلة حتى الآن</td></tr>';
+    } else {
+      validRecords.forEach(item => {
+        tbody.innerHTML += `
+          <tr class="code-query-row">
+            <td style="padding:8px; border-bottom:1px solid var(--border);"><b style="color:var(--primary);">${item.patientCode}</b></td>
+            <td style="padding:8px; border-bottom:1px solid var(--border);">${item.patientName || '-'}</td>
+            <td style="padding:8px; border-bottom:1px solid var(--border);">${item.opDate || '-'}</td>
+            <td style="padding:8px; border-bottom:1px solid var(--border);">${item.hospital || '-'}</td>
+          </tr>
+        `;
+      });
+    }
+    document.getElementById('codesSearchInput').value = '';
+    document.getElementById('codesQueryModal').style.display = 'flex';
+  }
+
+  function closeCodesQueryModal() {
+    document.getElementById('codesQueryModal').style.display = 'none';
+  }
+
+  function filterCodesQueryList() {
+    let q = document.getElementById('codesSearchInput').value.trim().toLowerCase();
+    let rows = document.querySelectorAll('#codesQueryTableBody tr.code-query-row');
+    
+    rows.forEach(row => {
+      let text = row.innerText.toLowerCase();
+      row.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+
   function viewConsentFile(dbId) {
     let item = allPreOpRecords.find(a => a.dbId === dbId);
     if (!item || !item.consentFile) return alert("لا يوجد إقرار مرفق لهذه الحالة");
@@ -914,16 +982,27 @@
   async function autoSaveRowStatus(dbId) {
     let item = allPreOpRecords.find(a => a.dbId === dbId);
     if (item) {
-      let updatedPayload = { ...item };
-      delete updatedPayload.dbId;
-
       let statusSelect = document.getElementById(`statusSelect_${dbId}`).value;
       let opDateVal = document.getElementById(`rowOpDate_${dbId}`).value;
       let detailsContainer = document.getElementById(`detailsContainer_${dbId}`);
       
       detailsContainer.style.display = (statusSelect === 'completed') ? 'block' : 'none';
 
-      let codeVal = document.getElementById(`rowCode_${dbId}`).value.trim();
+      let codeInputElem = document.getElementById(`rowCode_${dbId}`);
+      let codeVal = codeInputElem.value.trim();
+
+      // التحقق من عدم تكرار الكود
+      if (codeVal) {
+        let isDuplicate = allPreOpRecords.some(r => r.dbId !== dbId && r.patientCode && r.patientCode.trim().toLowerCase() === codeVal.toLowerCase());
+        if (isDuplicate) {
+          alert(`⚠️ عذراً، الكود (${codeVal}) مسجل بالفعل لحالة أخرى! لا يمكن تكرار الأكواد.`);
+          codeInputElem.value = item.patientCode || '';
+          return;
+        }
+      }
+
+      let updatedPayload = { ...item };
+      delete updatedPayload.dbId;
 
       updatedPayload.opStatus = statusSelect;
       updatedPayload.opDate = opDateVal;
@@ -1067,7 +1146,6 @@
     let patientName = document.getElementById('patientName').value.trim();
     if(!patientName) return alert("يرجى كتابة اسم الحالة");
 
-    // التحقق من عدم تكرار اسم الحالة في السجلات المسجلة مسبقاً
     let isAlreadyExists = allPreOpRecords.some(item => item.patientName && item.patientName.trim().toLowerCase() === patientName.toLowerCase());
     if (isAlreadyExists) {
       return alert(`⚠️ عذراً، اسم الحالة (${patientName}) مسجل بالفعل مسبقاً في شيت Pre-Op ولا يمكن تكراره!`);
